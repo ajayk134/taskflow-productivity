@@ -74,9 +74,13 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/search', searchRoutes);
 
 // Health check
+let dbStatus = 'disconnected';
+let lastDbError = null;
+
 app.get('/api/health', (req, res) => {
   res.json({
-    status: 'healthy',
+    status: dbStatus === 'connected' ? 'healthy' : 'degraded',
+    db: dbStatus,
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development'
@@ -102,24 +106,37 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Connect to MongoDB and start server
+// Connect to MongoDB with resilience - server stays up even if DB is unreachable
 const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
-  console.error('MONGODB_URI is not defined');
-  process.exit(1);
-}
+const connectWithRetry = async (retries = 10) => {
+  if (!MONGODB_URI) {
+    console.error('MONGODB_URI is not defined; DB-dependent features disabled');
+    dbStatus = 'unconfigured';
+    return;
+  }
 
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  });
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      await mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 15000 });
+      dbStatus = 'connected';
+      lastDbError = null;
+      console.log('Connected to MongoDB');
+      return;
+    } catch (err) {
+      lastDbError = err.message;
+      dbStatus = 'disconnected';
+      console.error(`MongoDB connection attempt ${attempt + 1}/${retries} failed: ${err.message}`);
+      await new Promise(r => setTimeout(r, 30000));
+    }
+  }
+  console.error('Giving up MongoDB connection retries after', retries, 'attempts');
+};
+
+// Start the HTTP server immediately and attempt DB connection in the background
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+connectWithRetry();
 
 export default app;
