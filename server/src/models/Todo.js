@@ -90,12 +90,16 @@ todoSchema.virtual('completed').get(function() {
   return this.status === 'completed';
 });
 
-// Virtual populated with the project name so the client can group by project
-todoSchema.virtual('projectName', {
+// Populated ref to the project + string virtual used by the client for grouping
+todoSchema.virtual('projectRef', {
   ref: 'Project',
   localField: 'projectId',
   foreignField: '_id',
   justOne: true
+});
+
+todoSchema.virtual('projectName').get(function() {
+  return this.projectRef && this.projectRef.name ? this.projectRef.name : null;
 });
 
 todoSchema.virtual('deleted').get(function() {
