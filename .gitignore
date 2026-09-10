@@ -12,3 +12,4 @@ client/dist/
 server/dist/
 .env.development
 .env.test
+.github/workflows/ci.yml
