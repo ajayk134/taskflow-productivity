@@ -6,6 +6,7 @@ import {
   useSensor,
   useSensors,
   DragOverlay,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -79,7 +80,7 @@ function KanbanCard({ todo, onOpen }) {
     >
       <div className="flex items-start gap-2">
         <button
-          className="mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+          className="mt-0.5 p-1 -ml-1 transition-opacity cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 md:opacity-0 md:group-hover:opacity-100"
           {...attributes}
           {...listeners}
         >
@@ -109,6 +110,10 @@ function KanbanColumn({ column, todos, onAddTask, onOpenTask }) {
   const [newTitle, setNewTitle] = useState('');
   const { createTodo, updateTodo, fetchTodos } = useTodoStore();
   const { projects } = useProjectStore();
+  const { setNodeRef, isOver } = useDroppable({
+    id: column.id,
+    data: { column },
+  });
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -130,8 +135,8 @@ function KanbanColumn({ column, todos, onAddTask, onOpenTask }) {
   };
 
   return (
-    <div className="flex flex-col min-w-[280px] w-[280px] lg:w-[280px] flex-shrink-0">
-      <div className="flex items-center gap-2 px-3 py-2 mb-3">
+    <div className="flex flex-col w-full md:w-[300px] lg:w-[300px] md:min-w-[300px] md:flex-shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 mb-2 md:mb-3">
         <div className={clsx('w-2 h-2 rounded-full', column.color)} />
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{column.label}</h3>
         <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full font-medium">
@@ -139,7 +144,13 @@ function KanbanColumn({ column, todos, onAddTask, onOpenTask }) {
         </span>
       </div>
 
-      <div className="flex-1 space-y-2 min-h-[200px] p-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30">
+      <div
+        ref={setNodeRef}
+        className={clsx(
+          'flex-1 space-y-2 min-h-[120px] md:min-h-[200px] p-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30',
+          isOver && 'ring-2 ring-blue-400/60 bg-blue-50/60 dark:bg-blue-500/5'
+        )}
+      >
         <SortableContext items={todos.map((t) => t._id)} strategy={verticalListSortingStrategy}>
           {todos.map((todo) => (
             <KanbanCard key={todo._id} todo={todo} onOpen={onOpenTask} />
@@ -277,7 +288,7 @@ export default function Kanban() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2 scrollbar-thin">
+        <div className="flex flex-col md:flex-row gap-5 md:gap-4 md:overflow-x-auto md:pb-4 md:-mx-2 md:px-2">
           {COLUMNS.map((column) => (
             <KanbanColumn
               key={column.id}
@@ -288,7 +299,7 @@ export default function Kanban() {
         </div>
         <DragOverlay>
           {activeTodo && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 shadow-xl opacity-90 rotate-2 w-[280px]">
+            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 shadow-xl opacity-90 rotate-2 w-full max-w-[300px]">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{activeTodo.title}</p>
             </div>
           )}

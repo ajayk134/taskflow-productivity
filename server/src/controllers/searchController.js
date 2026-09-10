@@ -96,7 +96,7 @@ export const exportData = async (req, res) => {
       data: { todos, projects, tags, habits, goals, templates, notes }
     };
 
-    res.setHeader('Content-Disposition', 'attachment; filename=taskflow-backup.json');
+    res.setHeader('Content-Disposition', 'attachment; filename=donezo-backup.json');
     res.json(backup);
   } catch (error) {
     res.status(500).json({ error: error.message });

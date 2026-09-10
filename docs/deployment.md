@@ -2,11 +2,11 @@
 
 ## Overview
 
-TaskFlow is designed as a single-service deployment. The Express server serves both the REST API and the built React client in production. This guide covers deploying to [Render](https://render.com), but the same principles apply to any Node.js hosting platform.
+Donezo is designed as a single-service deployment. The Express server serves both the REST API and the built React client in production. This guide covers deploying to [Render](https://render.com), but the same principles apply to any Node.js hosting platform.
 
 ## Prerequisites
 
-- A GitHub repository with the TaskFlow codebase
+- A GitHub repository with the Donezo codebase
 - A [MongoDB Atlas](https://www.mongodb.com/atlas) cluster (free tier works)
 - A [Render](https://render.com) account
 
@@ -28,7 +28,7 @@ mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>?retryWrites=t
 Create a `.env` file locally for reference (never commit this):
 
 ```bash
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/taskflow?retryWrites=true&w=majority
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/donezo?retryWrites=true&w=majority
 JWT_SECRET=your-strong-random-secret-here-use-openssl-rand-base64-32
 NODE_ENV=production
 PORT=5000
@@ -54,7 +54,7 @@ openssl rand -base64 32
 ```yaml
 services:
   - type: web
-    name: taskflow
+    name: donezo
     runtime: node
     plan: free
     buildCommand: npm install && cd server && npm install && cd ../client && npm install && npm run build
@@ -67,7 +67,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: CORS_ORIGIN
-        value: https://taskflow.onrender.com
+        value: https://donezo.onrender.com
 ```
 
 ### Option B: Manual Setup
@@ -75,7 +75,7 @@ services:
 1. On Render, click **New** → **Web Service**
 2. Connect your GitHub repository
 3. Configure:
-   - **Name:** `taskflow`
+   - **Name:** `donezo`
    - **Runtime:** Node
    - **Build Command:**
      ```
@@ -90,7 +90,7 @@ services:
    - `MONGODB_URI` — Your MongoDB Atlas connection string
    - `JWT_SECRET` — Generated secret
    - `NODE_ENV` — `production`
-   - `CORS_ORIGIN` — Your Render service URL (e.g., `https://taskflow.onrender.com`)
+   - `CORS_ORIGIN` — Your Render service URL (e.g., `https://donezo.onrender.com`)
 5. Click **Create Web Service**
 
 ## Step 4: Verify Deployment

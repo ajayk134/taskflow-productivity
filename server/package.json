@@ -1,10 +1,11 @@
 {
-  "name": "taskflow-server",
+  "name": "donezo-server",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
+    "seed:demo": "node src/seed/demoSeed.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --forceExit --detectOpenHandles"
   },
   "dependencies": {

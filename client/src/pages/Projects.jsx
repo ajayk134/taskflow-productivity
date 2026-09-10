@@ -163,7 +163,7 @@ export default function Projects() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">{project.totalTodos || 0} tasks</p>
                   </div>
                 </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                   <button
                     onClick={(e) => { e.stopPropagation(); openEdit(project); }}
                     className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"

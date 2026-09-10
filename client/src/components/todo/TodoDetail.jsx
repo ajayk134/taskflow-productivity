@@ -91,7 +91,7 @@ function EditableTitle({ value, onSave }) {
       {value}
       <Pencil
         size={14}
-        className="text-gray-600 opacity-0 transition-opacity group-hover:opacity-100"
+        className="text-gray-600 transition-opacity md:opacity-0 md:group-hover:opacity-100"
       />
     </h2>
   );
@@ -144,7 +144,7 @@ function SubtaskList({ subtasks = [], onChange }) {
           </span>
           <button
             onClick={() => remove(sub.id)}
-            className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 transition-all"
+            className="text-gray-600 hover:text-red-400 transition-all md:opacity-0 md:group-hover:opacity-100"
           >
             <X size={12} />
           </button>
@@ -207,7 +207,7 @@ function ChecklistItem({ item, onToggle, onRemove }) {
       </span>
       <button
         onClick={() => onRemove(item.id)}
-        className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400 transition-all"
+        className="text-gray-600 hover:text-red-400 transition-all md:opacity-0 md:group-hover:opacity-100"
       >
         <X size={12} />
       </button>
@@ -504,7 +504,7 @@ export default function TodoDetail({ todo, onClose }) {
                     {tag}
                     <button
                       onClick={() => removeTag(tag)}
-                      className="hidden group-hover/tag:inline"
+                      className="inline md:hidden md:group-hover/tag:inline"
                     >
                       <X size={10} />
                     </button>
@@ -740,7 +740,7 @@ export default function TodoDetail({ todo, onClose }) {
                   </a>
                   <button
                     onClick={() => removeLink(idx)}
-                    className="opacity-0 group-hover:opacity-100 text-gray-600 hover:text-red-400"
+                    className="text-gray-600 hover:text-red-400 md:opacity-0 md:group-hover:opacity-100"
                   >
                     <X size={12} />
                   </button>

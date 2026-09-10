@@ -171,7 +171,7 @@ export default function Notes() {
             >
               <div className="flex items-start justify-between mb-2">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 line-clamp-1">{note.title || 'Untitled'}</h3>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                   <button
                     onClick={(e) => { e.stopPropagation(); togglePin(note); }}
                     className={clsx('p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700', note.pinned ? 'text-amber-500' : 'text-gray-400')}
@@ -217,7 +217,7 @@ export default function Notes() {
               <span className="text-[11px] text-gray-400 flex-shrink-0">{format(parseISO(note.updatedAt || note.createdAt), 'MMM d')}</span>
               <button
                 onClick={(e) => { e.stopPropagation(); deleteNote(note._id); }}
-                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
+                className="p-1 text-gray-400 hover:text-red-500 transition-all md:opacity-0 md:group-hover:opacity-100"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

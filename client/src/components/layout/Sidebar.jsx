@@ -93,7 +93,7 @@ export default function Sidebar() {
             <Zap className="w-4 h-4 text-white" />
           </div>
           <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            TaskFlow
+            Donezo
           </span>
         </div>
         <button

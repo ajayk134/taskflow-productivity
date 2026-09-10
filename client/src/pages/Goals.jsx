@@ -176,7 +176,7 @@ export default function Goals() {
             >
               <div className="flex items-start gap-3 mb-3">
                 <div className={clsx('w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0', cfg.color)}>
-                  <Target className="w-4.5 h-4.5 text-white" />
+                  <Target className="w-[18px] h-[18px] text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{goal.title}</h3>
@@ -227,7 +227,7 @@ export default function Goals() {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
             <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Optional description" className="input min-h-[80px] resize-none" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Date</label>
               <input type="date" value={newTargetDate} onChange={(e) => setNewTargetDate(e.target.value)} className="input" />
@@ -296,7 +296,7 @@ export default function Goals() {
                 {(showDetail.milestones || []).map((m) => (
                   <div key={m._id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                     <button onClick={() => toggleMilestone(showDetail._id, m._id, m.completed)} className="flex-shrink-0">
-                      {m.completed ? <CheckCircle2 className="w-4.5 h-4.5 text-green-500" /> : <Circle className="w-4.5 h-4.5 text-gray-300 dark:text-gray-600" />}
+                      {m.completed ? <CheckCircle2 className="w-[18px] h-[18px] text-green-500" /> : <Circle className="w-[18px] h-[18px] text-gray-300 dark:text-gray-600" />}
                     </button>
                     <span className={clsx('text-sm', m.completed ? 'text-gray-400 line-through' : 'text-gray-700 dark:text-gray-300')}>{m.name}</span>
                   </div>

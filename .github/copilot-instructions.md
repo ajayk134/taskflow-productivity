@@ -1,8 +1,8 @@
-# Copilot Instructions for TaskFlow
+# Copilot Instructions for Donezo
 
 ## Project Overview
 
-TaskFlow is a full-stack productivity application with a React 18 frontend (Vite, Tailwind CSS, Zustand) and Express.js backend (Mongoose/MongoDB). It manages tasks, projects, habits, goals, notes, and templates.
+Donezo is a full-stack productivity application with a React 18 frontend (Vite, Tailwind CSS, Zustand) and Express.js backend (Mongoose/MongoDB). It manages tasks, projects, habits, goals, notes, and templates.
 
 ## Architecture
 

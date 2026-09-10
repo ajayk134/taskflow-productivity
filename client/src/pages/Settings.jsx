@@ -100,7 +100,7 @@ export default function Settings() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `taskflow-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `donezo-export-${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success('Data exported successfully');

@@ -174,7 +174,8 @@ export default function Calendar() {
   );
 
   const renderWeekView = () => (
-    <div className="grid grid-cols-7 gap-2">
+    <div className="overflow-x-auto pb-1">
+      <div className="grid min-w-[560px] grid-cols-7 gap-2 md:min-w-0">
       {weekDays.map((day) => {
         const key = format(day, 'yyyy-MM-dd');
         const dayTodos = (todosByDate[key] || []).sort((a, b) => (a.dueDate || '').localeCompare(b.dueDate || ''));
@@ -203,6 +204,7 @@ export default function Calendar() {
           </div>
         );
       })}
+      </div>
     </div>
   );
 
@@ -286,7 +288,7 @@ export default function Calendar() {
                   key={v}
                   onClick={() => setView(v)}
                   className={clsx(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors capitalize',
+                    'flex flex-1 items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-md text-xs font-medium transition-colors justify-center capitalize',
                     view === v ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                   )}
                 >

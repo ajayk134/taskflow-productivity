@@ -150,7 +150,7 @@ productivity-app/
 
 ## State Management
 
-TaskFlow uses Zustand for state management. Each store is in `client/src/stores/`:
+Donezo uses Zustand for state management. Each store is in `client/src/stores/`:
 
 ```js
 import { create } from 'zustand';

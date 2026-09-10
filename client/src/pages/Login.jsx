@@ -47,7 +47,7 @@ export default function Login() {
             <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm">
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <span className="text-3xl font-bold text-white">TaskFlow</span>
+            <span className="text-3xl font-bold text-white">Donezo</span>
           </div>
           <h2 className="text-4xl font-bold text-white leading-tight mb-4">
             Manage your tasks<br />with clarity and focus.
@@ -79,7 +79,7 @@ export default function Login() {
               <Zap className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              TaskFlow
+              Donezo
             </span>
           </div>
 

@@ -85,25 +85,26 @@ export default function Header() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <header className="flex items-center h-16 px-4 md:px-6 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+    <header className="flex items-center h-14 sm:h-16 px-3 sm:px-6 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm gap-1 sm:gap-2">
       <button
         onClick={toggleSidebar}
-        className="p-2 -ml-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors lg:hidden"
+        aria-label="Open navigation menu"
+        className="flex items-center justify-center w-10 h-10 -ml-1 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors lg:hidden flex-shrink-0"
       >
         <Menu className="w-5 h-5" />
       </button>
 
-      <div className="flex items-center gap-3 ml-2 lg:ml-0">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+      <div className="flex items-center ml-1 sm:ml-2 lg:ml-0 min-w-0 flex-1">
+        <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate whitespace-nowrap">
           {viewTitle}
         </h1>
       </div>
 
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="flex items-center gap-0.5 sm:gap-1.5 ml-auto flex-shrink-0">
         <div
           className={clsx(
             'relative hidden sm:flex items-center transition-all duration-200',
-            searchFocused ? 'w-72' : 'w-56'
+            searchFocused ? 'w-56 md:w-72' : 'w-40 md:w-56'
           )}
         >
           <Search className="absolute left-3 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -127,23 +128,28 @@ export default function Header() {
 
         <button
           onClick={toggleCommandPalette}
-          className="p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors sm:hidden"
+          aria-label="Search"
+          title="Search"
+          className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors sm:hidden"
         >
           <Search className="w-5 h-5" />
         </button>
 
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('taskflow:open-quick-add'))}
-          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm shadow-blue-500/25 transition-all duration-150 active:scale-[0.97]"
+          aria-label="Add Task"
+          title="Add Task"
+          className="flex items-center justify-center w-10 h-10 md:w-auto md:px-3 md:py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm shadow-blue-500/25 transition-all duration-150 active:scale-[0.97]"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5 md:w-4 md:h-4" />
           <span className="hidden md:inline">Add Task</span>
         </button>
 
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className="p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
         >
           {theme === 'dark' ? (
             <Sun className="w-5 h-5" />
@@ -155,7 +161,9 @@ export default function Header() {
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
-            className="relative p-2 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Notifications"
+            title="Notifications"
+            className="relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
@@ -166,7 +174,7 @@ export default function Header() {
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/30 border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] max-w-[26rem] sm:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/30 border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">
                   Notifications
@@ -208,7 +216,8 @@ export default function Header() {
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2 p-1 pr-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            aria-label="User menu"
+            className="flex items-center gap-1.5 p-1 pr-1.5 sm:pr-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
           >
             <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-bold shadow-sm">
               {user?.name?.charAt(0)?.toUpperCase() || 'U'}
@@ -222,7 +231,7 @@ export default function Header() {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/30 border border-gray-200 dark:border-gray-700 z-50 overflow-hidden py-1.5">
+            <div className="absolute right-0 mt-2 w-56 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/30 border border-gray-200 dark:border-gray-700 z-50 overflow-hidden py-1.5">
               <div className="px-3.5 py-2.5 border-b border-gray-100 dark:border-gray-700 mb-1.5">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                   {user?.name || 'User'}

@@ -1,4 +1,4 @@
-# TaskFlow
+# Donezo
 
 A premium personal productivity platform built with React and Express. Manage tasks, projects, habits, goals, and notes in one beautifully designed application.
 

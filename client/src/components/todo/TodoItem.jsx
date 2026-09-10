@@ -232,8 +232,7 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
       {/* Quick actions */}
       <div
         className={clsx(
-          'flex flex-shrink-0 items-center gap-1 transition-opacity duration-150',
-          isHovered && !isBulkMode ? 'opacity-100' : 'opacity-0',
+          'flex flex-shrink-0 items-center gap-1 transition-opacity duration-150 md:opacity-0 md:group-hover:opacity-100',
           isBulkMode && 'hidden'
         )}
       >

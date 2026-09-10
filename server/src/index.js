@@ -48,9 +48,19 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// CORS
+// CORS - support a comma-separated allowlist and reflect the exact request origin
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGIN || '*')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin(origin, callback) {
+    if (!origin || ALLOWED_ORIGINS.includes('*') || ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, origin || true);
+    }
+    return callback(null, false);
+  },
   credentials: true
 }));
 

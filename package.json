@@ -1,7 +1,7 @@
 {
-  "name": "taskflow-productivity",
+  "name": "donezo-productivity",
   "version": "1.0.0",
-  "description": "TaskFlow - Premium personal productivity platform",
+  "description": "Donezo - Premium personal productivity platform",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
@@ -11,6 +11,7 @@
     "start": "cd server && npm start",
     "test": "cd server && npm test",
     "test:client": "cd client && npm test",
+    "seed:demo": "cd server && npm run seed:demo",
     "lint": "cd client && npm run lint",
     "typecheck": "cd client && npx tsc --noEmit",
     "setup": "npm install && cd server && npm install && cd ../client && npm install"

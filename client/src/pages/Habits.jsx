@@ -236,7 +236,7 @@ export default function Habits() {
                     </button>
                   </div>
 
-                  <div className="flex gap-[3px]">
+                  <div className="flex gap-[3px] overflow-x-auto min-w-0 pb-0.5 -mx-1 px-1">
                     {last30Days.map((day) => {
                       const key = `${habit._id}:${format(day, 'yyyy-MM-dd')}`;
                       const done = completions[key];
@@ -246,7 +246,7 @@ export default function Habits() {
                           key={key}
                           onClick={() => toggleCompletion(habit._id, day)}
                           className={clsx(
-                            'w-2.5 h-2.5 rounded-sm transition-all hover:scale-125',
+                            'w-2.5 h-2.5 rounded-sm transition-all hover:scale-125 flex-shrink-0',
                             done ? 'opacity-100' : 'bg-gray-100 dark:bg-gray-700 opacity-50 hover:opacity-75',
                             isToday && !done && 'ring-1 ring-gray-300 dark:ring-gray-600'
                           )}

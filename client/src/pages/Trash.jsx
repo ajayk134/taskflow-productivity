@@ -15,7 +15,7 @@ function TrashItem({ todo, onRestore, onDelete, onOpen }) {
           Deleted {formatDistanceToNow(new Date(todo.deletedAt || todo.updatedAt), { addSuffix: true })}
         </span>
       </div>
-      <div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="flex items-center gap-1.5 transition-opacity md:opacity-0 md:group-hover:opacity-100">
         <button
           onClick={() => onRestore(todo.id)}
           className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-blue-500/10 hover:text-blue-400"

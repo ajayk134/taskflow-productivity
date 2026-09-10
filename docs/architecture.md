@@ -2,7 +2,7 @@
 
 ## System Architecture
 
-TaskFlow follows a classic monorepo structure with a separated client and server:
+Donezo follows a classic monorepo structure with a separated client and server:
 
 ```
 ┌─────────────────────────────────────────────────┐
