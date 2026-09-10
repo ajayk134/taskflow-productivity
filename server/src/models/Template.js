@@ -13,7 +13,7 @@ const templateItemSchema = new mongoose.Schema({
 });
 
 const templateSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   name: { type: String, required: true, trim: true },
   description: { type: String, default: '' },
   icon: { type: String, default: '📋' },
