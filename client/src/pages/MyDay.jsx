@@ -71,7 +71,7 @@ export default function MyDay() {
             <Sun size={20} className="text-amber-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">My Day</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">My Day</h1>
             <p className="text-xs text-gray-500">{format(new Date(), 'EEEE, MMMM d')}</p>
           </div>
         </div>
@@ -87,17 +87,17 @@ export default function MyDay() {
         <div>
           <div className="mb-3 flex items-center gap-2 px-1">
             <Sun size={14} className="text-amber-400" />
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
               My Day
             </h3>
-            <span className="rounded-full bg-gray-700/40 px-1.5 py-0.5 text-[10px] text-gray-500">
+            <span className="rounded-full bg-gray-200/80 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700/40">
               {myDayTodos.length}
             </span>
           </div>
           {myDayTodos.length === 0 && !isLoading ? (
-            <div className="rounded-xl border border-gray-800/50 bg-gray-800/20 p-6 text-center">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center dark:border-gray-800/50 dark:bg-gray-800/20">
               <Sparkles size={24} className="mx-auto mb-2 text-amber-500/40" />
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 No tasks in your day yet. Add one above or mark tasks as My Day.
               </p>
             </div>
@@ -119,7 +119,7 @@ export default function MyDay() {
           <div>
             <div className="mb-3 flex items-center gap-2 px-1">
               <AlertTriangle size={14} className="text-red-400" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Overdue
               </h3>
               <span className="rounded-full bg-red-500/20 px-1.5 py-0.5 text-[10px] text-red-400">
@@ -143,7 +143,7 @@ export default function MyDay() {
           <div>
             <div className="mb-3 flex items-center gap-2 px-1">
               <Clock size={14} className="text-blue-400" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Due Today
               </h3>
               <span className="rounded-full bg-blue-500/20 px-1.5 py-0.5 text-[10px] text-blue-400">
@@ -167,7 +167,7 @@ export default function MyDay() {
           <div>
             <div className="mb-3 flex items-center gap-2 px-1">
               <CheckCircle2 size={14} className="text-emerald-400" />
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Completed Today
               </h3>
               <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] text-emerald-400">
@@ -188,10 +188,10 @@ export default function MyDay() {
 
         {/* Smart suggestions */}
         {!isLoading && myDayTodos.length === 0 && overdue.length === 0 && todayTasks.length === 0 && (
-          <div className="rounded-xl border border-gray-800/50 bg-gray-800/20 p-8 text-center">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-800/50 dark:bg-gray-800/20">
             <Sparkles size={32} className="mx-auto mb-3 text-amber-500/30" />
-            <h3 className="mb-1 text-sm font-medium text-gray-400">You're all caught up!</h3>
-            <p className="text-xs text-gray-600">
+            <h3 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">You're all caught up!</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-600">
               Add tasks to your day or check your inbox for new items.
             </p>
           </div>

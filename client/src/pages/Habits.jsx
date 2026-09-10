@@ -218,18 +218,18 @@ export default function Habits() {
 
                   <div className="flex items-center gap-4 mb-3">
                     <div className="flex items-center gap-1 text-xs">
-                      <Flame className={clsx('w-3.5 h-3.5', streak > 0 ? 'text-orange-500' : 'text-gray-300')} />
+                      <Flame className={clsx('w-3.5 h-3.5', streak > 0 ? 'text-orange-500' : 'text-gray-300 dark:text-gray-600')} />
                       <span className={clsx('font-semibold', streak > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400')}>{streak}</span>
                       <span className="text-gray-400">streak</span>
                     </div>
                     <div className="flex items-center gap-1 text-xs">
-                      <TrendingUp className="w-3.5 h-3.5 text-gray-300" />
+                      <TrendingUp className="w-3.5 h-3.5 text-gray-400 dark:text-gray-600" />
                       <span className="font-semibold text-gray-600 dark:text-gray-300">{rate}%</span>
                       <span className="text-gray-400">rate</span>
                     </div>
                     <button
                       onClick={() => archiveHabit(habit._id)}
-                      className="ml-auto p-1 text-gray-300 hover:text-gray-500 transition-colors"
+                      className="ml-auto p-1 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                       title="Archive"
                     >
                       <Archive className="w-3.5 h-3.5" />

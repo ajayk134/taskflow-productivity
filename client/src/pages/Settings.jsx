@@ -44,12 +44,12 @@ function Section({ title, children }) {
 
 function SettingRow({ label, description, children }) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <div className="min-w-0">
         <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</p>
         {description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{description}</p>}
       </div>
-      <div className="flex-shrink-0">{children}</div>
+      <div className="flex-shrink-0 sm:ml-auto">{children}</div>
     </div>
   );
 }
@@ -145,29 +145,35 @@ export default function Settings() {
       </div>
 
       <Section title="Appearance">
-        <SettingRow label="Theme" description="Choose your preferred color theme">
-          <div className="flex gap-2">
+        <div>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Theme</p>
+          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+            Choose your preferred color theme
+          </p>
+          <div className="mt-3 grid w-full min-w-0 grid-cols-1 gap-2 sm:grid-cols-3">
             {THEMES.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
                 className={clsx(
-                  'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                  'flex w-full items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium',
+                  'transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+                  'focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-900',
                   theme === t.id
-                    ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-500/30'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    ? 'border-blue-200 bg-blue-50 text-blue-700 ring-1 ring-blue-300 shadow-sm dark:border-blue-500/40 dark:bg-blue-500/10 dark:text-blue-300 dark:ring-blue-500/40'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-400 dark:hover:border-gray-600 dark:hover:bg-gray-700/60'
                 )}
               >
-                <t.icon className="w-4 h-4" />
-                {t.label}
-                {theme === t.id && <Check className="w-3.5 h-3.5" />}
+                <t.icon className="w-4 h-4 shrink-0" />
+                <span className="flex-1 text-left">{t.label}</span>
+                {theme === t.id && <Check className="w-4 h-4 shrink-0" />}
               </button>
             ))}
           </div>
-        </SettingRow>
+        </div>
 
         <SettingRow label="Accent Color" description="Customize your accent color">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {ACCENT_COLORS.map((color) => (
               <button
                 key={color}

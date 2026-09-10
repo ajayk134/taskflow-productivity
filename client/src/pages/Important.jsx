@@ -34,7 +34,7 @@ export default function Important() {
             <Star size={20} className="text-blue-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Important</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Important</h1>
             <p className="text-xs text-gray-500">
               {importantTodos.length} important task{importantTodos.length !== 1 ? 's' : ''}
             </p>
@@ -50,10 +50,10 @@ export default function Important() {
       {/* Todo List */}
       <div className="flex-1 overflow-y-auto">
         {importantTodos.length === 0 && !isLoading ? (
-          <div className="rounded-xl border border-gray-800/50 bg-gray-800/20 p-8 text-center">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-800/50 dark:bg-gray-800/20">
             <Star size={32} className="mx-auto mb-3 text-blue-500/30" />
-            <h3 className="mb-1 text-sm font-medium text-gray-400">No important tasks</h3>
-            <p className="text-xs text-gray-600">
+            <h3 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">No important tasks</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-600">
               Star tasks to mark them as important.
             </p>
           </div>

@@ -8,10 +8,10 @@ import toast from 'react-hot-toast';
 
 function TrashItem({ todo, onRestore, onDelete, onOpen }) {
   return (
-    <div className="group flex items-center gap-3 rounded-xl border border-gray-800/30 bg-gray-800/20 px-4 py-3 transition-all hover:border-gray-700/40 hover:bg-gray-800/40">
+    <div className="group flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all hover:border-gray-300 hover:bg-gray-100 dark:border-gray-800/30 dark:bg-gray-800/20 dark:hover:border-gray-700/40 dark:hover:bg-gray-800/40">
       <div className="min-w-0 flex-1 cursor-pointer" onClick={() => onOpen(todo)}>
-        <span className="block truncate text-sm text-gray-400 line-through">{todo.title}</span>
-        <span className="mt-0.5 block text-[10px] text-gray-600">
+        <span className="block truncate text-sm text-gray-500 line-through dark:text-gray-400">{todo.title}</span>
+        <span className="mt-0.5 block text-[10px] text-gray-500 dark:text-gray-600">
           Deleted {formatDistanceToNow(new Date(todo.deletedAt || todo.updatedAt), { addSuffix: true })}
         </span>
       </div>
@@ -69,7 +69,7 @@ export default function Trash() {
             <Trash2 size={20} className="text-red-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Trash</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Trash</h1>
             <p className="text-xs text-gray-500">
               {trash.length} deleted task{trash.length !== 1 ? 's' : ''}
             </p>
@@ -88,10 +88,10 @@ export default function Trash() {
       {/* Trash List */}
       <div className="flex-1 overflow-y-auto">
         {trash.length === 0 && !isLoading ? (
-          <div className="rounded-xl border border-gray-800/50 bg-gray-800/20 p-8 text-center">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-800/50 dark:bg-gray-800/20">
             <Trash2 size={32} className="mx-auto mb-3 text-gray-600/40" />
-            <h3 className="mb-1 text-sm font-medium text-gray-400">Trash is empty</h3>
-            <p className="text-xs text-gray-600">Deleted tasks will appear here.</p>
+            <h3 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">Trash is empty</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-600">Deleted tasks will appear here.</p>
           </div>
         ) : (
           <div className="space-y-1.5">
@@ -115,13 +115,13 @@ export default function Trash() {
             className="absolute inset-0 bg-black/50"
             onClick={() => setShowConfirmEmpty(false)}
           />
-          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-gray-700/50 bg-gray-800 p-6 shadow-2xl">
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700/50 dark:bg-gray-800">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/15">
                 <AlertTriangle size={20} className="text-red-400" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-gray-100">Empty Trash?</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Empty Trash?</h3>
                 <p className="text-xs text-gray-500">
                   This will permanently delete {trash.length} task{trash.length !== 1 ? 's' : ''}.
                 </p>
@@ -130,7 +130,7 @@ export default function Trash() {
             <div className="flex gap-2">
               <button
                 onClick={() => setShowConfirmEmpty(false)}
-                className="flex-1 rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 transition-colors hover:bg-gray-700/50"
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700/50"
               >
                 Cancel
               </button>

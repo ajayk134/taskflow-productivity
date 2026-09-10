@@ -78,10 +78,10 @@ export default function Upcoming() {
     <div>
       <div className="mb-3 flex items-center gap-2 px-1">
         {Icon && <Icon size={14} className={color} />}
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
           {title}
         </h3>
-        <span className="rounded-full bg-gray-700/40 px-1.5 py-0.5 text-[10px] text-gray-500">
+        <span className="rounded-full bg-gray-200/80 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700/40">
           {tasks.length}
         </span>
       </div>
@@ -106,7 +106,7 @@ export default function Upcoming() {
             <Calendar size={20} className="text-indigo-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Upcoming</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Upcoming</h1>
             <p className="text-xs text-gray-500">
               {format(startOfWeek(new Date(), { weekStartsOn: 1 }), 'MMM d')} –{' '}
               {format(endOfWeek(addWeeks(new Date(), weekOffset + 1), { weekStartsOn: 1 }), 'MMM d, yyyy')}
@@ -116,13 +116,13 @@ export default function Upcoming() {
             <button
               onClick={() => setWeekOffset(Math.max(0, weekOffset - 1))}
               disabled={weekOffset === 0}
-              className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-700/50 hover:text-gray-300 disabled:opacity-30"
+              className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700/50 dark:hover:text-gray-300 disabled:opacity-30"
             >
               <ChevronLeft size={16} />
             </button>
             <button
               onClick={() => setWeekOffset(weekOffset + 1)}
-              className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-700/50 hover:text-gray-300"
+              className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700/50 dark:hover:text-gray-300"
             >
               <ChevronRight size={16} />
             </button>
@@ -156,10 +156,10 @@ export default function Upcoming() {
           thisWeekTodos.length === 0 &&
           nextWeekTodos.length === 0 &&
           laterTodos.length === 0 && (
-            <div className="rounded-xl border border-gray-800/50 bg-gray-800/20 p-8 text-center">
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-800/50 dark:bg-gray-800/20">
               <Calendar size={32} className="mx-auto mb-3 text-indigo-500/30" />
-              <h3 className="mb-1 text-sm font-medium text-gray-400">No upcoming tasks</h3>
-              <p className="text-xs text-gray-600">
+              <h3 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">No upcoming tasks</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-600">
                 Tasks with due dates will appear here.
               </p>
             </div>

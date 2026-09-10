@@ -93,14 +93,14 @@ function LoadingSkeleton() {
       {Array.from({ length: 5 }).map((_, i) => (
         <div
           key={i}
-          className="flex animate-pulse items-center gap-3 rounded-xl border border-gray-800 bg-gray-800/30 px-4 py-3"
+          className="flex animate-pulse items-center gap-3 rounded-xl border border-gray-200 bg-gray-100/70 px-4 py-3 dark:border-gray-800 dark:bg-gray-800/30"
         >
-          <div className="h-5 w-5 rounded-full bg-gray-700" />
+          <div className="h-5 w-5 rounded-full bg-gray-200 dark:bg-gray-700" />
           <div className="flex-1 space-y-2">
-            <div className="h-3.5 w-3/4 rounded bg-gray-700" />
+            <div className="h-3.5 w-3/4 rounded bg-gray-200 dark:bg-gray-700" />
             <div className="flex gap-2">
-              <div className="h-3 w-16 rounded bg-gray-700/50" />
-              <div className="h-3 w-10 rounded bg-gray-700/50" />
+              <div className="h-3 w-16 rounded bg-gray-200 dark:bg-gray-700/50" />
+              <div className="h-3 w-10 rounded bg-gray-200 dark:bg-gray-700/50" />
             </div>
           </div>
         </div>
@@ -112,7 +112,7 @@ function LoadingSkeleton() {
 function EmptyState({ message }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-800/50">
+      <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-800/50">
         <Layers size={36} className="text-gray-600" />
       </div>
       <h3 className="mb-1 text-sm font-medium text-gray-400">
@@ -164,13 +164,13 @@ export default function TodoList({
                 setShowSortMenu(!showSortMenu);
                 setShowGroupMenu(false);
               }}
-              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-700/40 hover:text-gray-300"
+              className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700/40 dark:hover:text-gray-300"
             >
               <ArrowUpDown size={12} />
               {SORT_OPTIONS.find((o) => o.value === sortBy)?.label}
             </button>
             {showSortMenu && (
-              <div className="absolute right-0 top-full z-40 mt-1 w-36 rounded-xl border border-gray-700/50 bg-gray-800 py-1 shadow-xl">
+              <div className="absolute right-0 top-full z-40 mt-1 w-36 rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700/50 dark:bg-gray-800">
                 {SORT_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
@@ -181,8 +181,8 @@ export default function TodoList({
                     className={clsx(
                       'flex w-full items-center px-3 py-1.5 text-xs transition-colors',
                       sortBy === opt.value
-                        ? 'bg-blue-500/10 text-blue-400'
-                        : 'text-gray-300 hover:bg-gray-700/50'
+                        ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'
+                        : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50'
                     )}
                   >
                     {opt.label}
@@ -200,13 +200,13 @@ export default function TodoList({
                   setShowGroupMenu(!showGroupMenu);
                   setShowSortMenu(false);
                 }}
-                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-700/40 hover:text-gray-300"
+                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700/40 dark:hover:text-gray-300"
               >
                 <ListFilter size={12} />
                 Group
               </button>
               {showGroupMenu && (
-                <div className="absolute right-0 top-full z-40 mt-1 w-40 rounded-xl border border-gray-700/50 bg-gray-800 py-1 shadow-xl">
+                <div className="absolute right-0 top-full z-40 mt-1 w-40 rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700/50 dark:bg-gray-800">
                   {GROUP_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
@@ -217,8 +217,8 @@ export default function TodoList({
                       className={clsx(
                         'flex w-full items-center px-3 py-1.5 text-xs transition-colors',
                         activeGroup === opt.value
-                          ? 'bg-blue-500/10 text-blue-400'
-                          : 'text-gray-300 hover:bg-gray-700/50'
+                          ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'
+                          : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50'
                       )}
                     >
                       {opt.label}
@@ -251,7 +251,7 @@ export default function TodoList({
                 <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                   {groupLabel}
                 </h4>
-                <span className="rounded-full bg-gray-700/40 px-1.5 py-0.5 text-[10px] text-gray-500">
+                <span className="rounded-full bg-gray-200/80 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700/40">
                   {groupTodos.length}
                 </span>
               </div>

@@ -67,7 +67,7 @@ export default function Completed() {
             <CheckCircle2 size={20} className="text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Completed</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Completed</h1>
             <p className="text-xs text-gray-500">{completedTodos.length} tasks completed</p>
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function Completed() {
               'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
               filter === f.value
                 ? 'bg-emerald-500/15 text-emerald-400'
-                : 'text-gray-500 hover:bg-gray-700/40 hover:text-gray-300'
+                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700/40 dark:hover:text-gray-300'
             )}
           >
             {f.label}
@@ -102,7 +102,7 @@ export default function Completed() {
               <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
                 {date}
               </h3>
-              <span className="rounded-full bg-gray-700/40 px-1.5 py-0.5 text-[10px] text-gray-500">
+              <span className="rounded-full bg-gray-200/80 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700/40">
                 {tasks.length}
               </span>
             </div>
@@ -119,10 +119,10 @@ export default function Completed() {
         ))}
 
         {!isLoading && filtered.length === 0 && (
-          <div className="rounded-xl border border-gray-800/50 bg-gray-800/20 p-8 text-center">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-800/50 dark:bg-gray-800/20">
             <CheckCircle2 size={32} className="mx-auto mb-3 text-emerald-500/30" />
-            <h3 className="mb-1 text-sm font-medium text-gray-400">No completed tasks</h3>
-            <p className="text-xs text-gray-600">
+            <h3 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">No completed tasks</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-600">
               Completed tasks will appear here.
             </p>
           </div>

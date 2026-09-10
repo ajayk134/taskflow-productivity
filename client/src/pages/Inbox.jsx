@@ -29,7 +29,7 @@ export default function Inbox() {
             <InboxIcon size={20} className="text-blue-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Inbox</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Inbox</h1>
             <p className="text-xs text-gray-500">Tasks without a project</p>
           </div>
         </div>

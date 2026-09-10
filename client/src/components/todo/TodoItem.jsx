@@ -103,8 +103,8 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
       className={clsx(
         'group relative flex items-center gap-3 rounded-xl border px-4 py-3 transition-all duration-200',
         completed
-          ? 'border-gray-800/30 bg-gray-900/20 opacity-60'
-          : 'border-gray-700/30 bg-gray-800/40 hover:border-gray-600/40 hover:bg-gray-800/60',
+          ? 'border-gray-200 bg-gray-100/60 opacity-60 dark:border-gray-800/30 dark:bg-gray-900/20'
+          : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700/30 dark:bg-gray-800/40 dark:hover:border-gray-600/40 dark:hover:bg-gray-800/60',
         isSelected && 'border-blue-500/40 bg-blue-500/5 ring-1 ring-blue-500/20',
         isBulkMode && 'cursor-default'
       )}
@@ -152,7 +152,7 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
           <span
             className={clsx(
               'truncate text-sm font-medium transition-all duration-200',
-              completed ? 'text-gray-500 line-through' : 'text-gray-100'
+              completed ? 'text-gray-500 line-through' : 'text-gray-900 dark:text-gray-100'
             )}
           >
             {todo.title}
@@ -188,7 +188,7 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
 
           {/* Project */}
           {project && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-gray-700/30 px-1.5 py-0.5 text-[10px] text-gray-400">
+            <span className="inline-flex items-center gap-1 rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700/30 dark:text-gray-400">
               {project.name}
             </span>
           )}
@@ -209,7 +209,7 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
           {/* Subtasks progress */}
           {subtaskTotal > 0 && (
             <span className="inline-flex items-center gap-1 text-[10px] text-gray-500">
-              <span className="h-1 w-8 rounded-full bg-gray-700">
+              <span className="h-1 w-8 rounded-full bg-gray-200 dark:bg-gray-700">
                 <span
                   className="block h-full rounded-full bg-blue-500 transition-all"
                   style={{ width: `${(subtaskDone / subtaskTotal) * 100}%` }}
@@ -242,21 +242,21 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
             e.stopPropagation();
             onOpenDetail?.(todo);
           }}
-          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-700/50 hover:text-gray-300"
+          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700/50 dark:hover:text-gray-300"
           title="Edit"
         >
           <Pencil size={14} />
         </button>
         <button
           onClick={handleToggle}
-          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-700/50 hover:text-emerald-400"
+          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-emerald-600 dark:hover:bg-gray-700/50 dark:hover:text-emerald-400"
           title={completed ? 'Mark incomplete' : 'Complete'}
         >
           <Check size={14} />
         </button>
         <button
           onClick={handleDelete}
-          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-700/50 hover:text-red-400"
+          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-700/50 dark:hover:text-red-400"
           title="Delete"
         >
           <Trash2 size={14} />
@@ -269,25 +269,25 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
               e.stopPropagation();
               setShowMenu(!showMenu);
             }}
-            className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-700/50 hover:text-gray-300"
+            className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700/50 dark:hover:text-gray-300"
           >
             <MoreHorizontal size={14} />
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-gray-700/50 bg-gray-800 py-1 shadow-xl">
+            <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700/50 dark:bg-gray-800">
               <button
                 onClick={handleDuplicate}
-                className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-700/50"
+                className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
               >
                 <Copy size={13} /> Duplicate
               </button>
               <button
                 onClick={handleArchive}
-                className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-700/50"
+                className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
               >
                 <Archive size={13} /> Archive
               </button>
-              <hr className="my-1 border-gray-700/50" />
+              <hr className="my-1 border-gray-100 dark:border-gray-700/50" />
               <button
                 onClick={handleDelete}
                 className="flex w-full items-center gap-2 px-3 py-2 text-xs text-red-400 hover:bg-red-500/10"

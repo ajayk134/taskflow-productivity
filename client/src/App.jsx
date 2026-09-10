@@ -99,11 +99,11 @@ function App() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: theme === 'dark' ? '#1f2937' : '#ffffff',
-            color: theme === 'dark' ? '#f3f4f6' : '#111827',
+            background: document.documentElement.classList.contains('dark') ? '#1f2937' : '#ffffff',
+            color: document.documentElement.classList.contains('dark') ? '#f3f4f6' : '#111827',
             boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
             borderRadius: '12px',
-            border: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+            border: `1px solid ${document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb'}`,
           },
         }}
       />

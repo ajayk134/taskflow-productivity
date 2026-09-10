@@ -86,7 +86,7 @@ export default function ProjectDetail() {
       <div className="mb-6">
         <button
           onClick={() => navigate('/projects')}
-          className="mb-3 flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-300"
+          className="mb-3 flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-gray-700 dark:hover:text-gray-300"
         >
           <ArrowLeft size={14} /> Projects
         </button>
@@ -113,7 +113,7 @@ export default function ProjectDetail() {
                   if (e.key === 'Enter') handleSaveName();
                   if (e.key === 'Escape') setIsEditingName(false);
                 }}
-                className="w-full bg-transparent text-xl font-bold text-gray-100 outline-none"
+                className="w-full bg-transparent text-xl font-bold text-gray-900 outline-none dark:text-gray-100"
               />
             ) : (
               <h1
@@ -121,7 +121,7 @@ export default function ProjectDetail() {
                   setNameDraft(currentProject.name);
                   setIsEditingName(true);
                 }}
-                className="cursor-pointer text-xl font-bold text-gray-100 hover:text-white"
+                className="cursor-pointer text-xl font-bold text-gray-900 hover:text-gray-600 dark:text-gray-100 dark:hover:text-white"
               >
                 {currentProject.name}
               </h1>
@@ -132,14 +132,14 @@ export default function ProjectDetail() {
           </div>
 
           {/* View toggle */}
-          <div className="flex items-center gap-1 rounded-lg border border-gray-700/50 bg-gray-800/50 p-0.5">
+          <div className="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-100/70 p-0.5 dark:border-gray-700/50 dark:bg-gray-800/50">
             <button
               onClick={() => setViewMode('list')}
               className={clsx(
                 'rounded-md p-1.5 transition-all',
                 viewMode === 'list'
-                  ? 'bg-gray-700 text-gray-200'
-                  : 'text-gray-500 hover:text-gray-300'
+                  ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-200'
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
               )}
             >
               <LayoutList size={14} />
@@ -149,8 +149,8 @@ export default function ProjectDetail() {
               className={clsx(
                 'rounded-md p-1.5 transition-all',
                 viewMode === 'kanban'
-                  ? 'bg-gray-700 text-gray-200'
-                  : 'text-gray-500 hover:text-gray-300'
+                  ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-200'
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
               )}
             >
               <Columns3 size={14} />
@@ -161,7 +161,7 @@ export default function ProjectDetail() {
           <div className="relative">
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-700/50 hover:text-gray-300"
+              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700/50 dark:hover:text-gray-300"
             >
               <MoreHorizontal size={18} />
             </button>
@@ -171,14 +171,14 @@ export default function ProjectDetail() {
                   className="fixed inset-0 z-40"
                   onClick={() => setShowMenu(false)}
                 />
-                <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-gray-700/50 bg-gray-800 py-1 shadow-xl">
+                <div className="absolute right-0 top-full z-50 mt-1 w-44 rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700/50 dark:bg-gray-800">
                   <button
                     onClick={() => {
                       setNameDraft(currentProject.name);
                       setIsEditingName(true);
                       setShowMenu(false);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-700/50"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
                   >
                     <Pencil size={13} /> Rename
                   </button>
@@ -187,11 +187,11 @@ export default function ProjectDetail() {
                       handleArchive();
                       setShowMenu(false);
                     }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-300 hover:bg-gray-700/50"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
                   >
                     <Archive size={13} /> Archive
                   </button>
-                  <hr className="my-1 border-gray-700/50" />
+                  <hr className="my-1 border-gray-100 dark:border-gray-700/50" />
                   <button
                     onClick={() => {
                       setShowConfirmDelete(true);
@@ -245,15 +245,15 @@ export default function ProjectDetail() {
             className="absolute inset-0 bg-black/50"
             onClick={() => setShowConfirmDelete(false)}
           />
-          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-gray-700/50 bg-gray-800 p-6 shadow-2xl">
-            <h3 className="mb-2 text-sm font-semibold text-gray-100">Delete Project?</h3>
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700/50 dark:bg-gray-800">
+            <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">Delete Project?</h3>
             <p className="mb-4 text-xs text-gray-500">
               This will permanently delete "{currentProject.name}" and all its tasks.
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowConfirmDelete(false)}
-                className="flex-1 rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-700/50"
+                className="flex-1 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700/50"
               >
                 Cancel
               </button>
@@ -289,10 +289,10 @@ function KanbanView({ todos, onOpenDetail }) {
         <div key={status} className="min-w-[280px] flex-1">
           <div className={clsx('mb-3 border-t-2 pt-3', config.color)}>
             <div className="flex items-center gap-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 {config.label}
               </h3>
-              <span className="rounded-full bg-gray-700/40 px-1.5 py-0.5 text-[10px] text-gray-500">
+              <span className="rounded-full bg-gray-200/80 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700/40">
                 {grouped[status]?.length || 0}
               </span>
             </div>
@@ -302,9 +302,9 @@ function KanbanView({ todos, onOpenDetail }) {
               <div
                 key={todo.id}
                 onClick={() => onOpenDetail(todo)}
-                className="cursor-pointer rounded-xl border border-gray-700/30 bg-gray-800/40 p-3 transition-all hover:border-gray-600/40 hover:bg-gray-800/60"
+                className="cursor-pointer rounded-xl border border-gray-200 bg-white p-3 transition-all hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700/30 dark:bg-gray-800/40 dark:hover:border-gray-600/40 dark:hover:bg-gray-800/60"
               >
-                <p className="text-sm text-gray-200">{todo.title}</p>
+                <p className="text-sm text-gray-900 dark:text-gray-200">{todo.title}</p>
                 <div className="mt-2 flex items-center gap-2">
                   {todo.priority && todo.priority <= 2 && (
                     <span
@@ -317,7 +317,7 @@ function KanbanView({ todos, onOpenDetail }) {
                     </span>
                   )}
                   {todo.dueDate && (
-                    <span className="rounded bg-gray-700/30 px-1.5 py-0.5 text-[10px] text-gray-500">
+                    <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500 dark:bg-gray-700/30">
                       {new Date(todo.dueDate).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',

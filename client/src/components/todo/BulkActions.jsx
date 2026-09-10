@@ -95,31 +95,31 @@ export default function BulkActions() {
 
   return (
     <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-slide-up">
-      <div className="flex items-center gap-3 rounded-2xl border border-gray-700/50 bg-gray-800/95 px-5 py-3 shadow-2xl backdrop-blur-xl">
+      <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white/95 px-5 py-3 shadow-2xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/95">
         {/* Select all / Clear */}
         <button
           onClick={() => selectAllTodos([])}
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-700/50 hover:text-gray-300"
+          className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-300"
           title="Select all"
         >
           <CheckSquare size={14} />
         </button>
         <button
           onClick={clearSelection}
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-700/50 hover:text-gray-300"
+          className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-300"
           title="Clear selection"
         >
           <Square size={14} />
         </button>
 
-        <div className="h-6 w-px bg-gray-700" />
+        <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
 
         {/* Count */}
-        <span className="min-w-[60px] text-center text-sm font-medium text-gray-200">
+        <span className="min-w-[60px] text-center text-sm font-medium text-gray-900 dark:text-gray-200">
           {count} selected
         </span>
 
-        <div className="h-6 w-px bg-gray-700" />
+        <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
 
         {/* Actions */}
         <button
@@ -148,13 +148,13 @@ export default function BulkActions() {
             <Flag size={14} /> Priority
           </button>
           {showPriorityMenu && (
-            <div className="absolute bottom-full left-0 mb-2 w-32 rounded-xl border border-gray-700/50 bg-gray-800 py-1 shadow-xl">
+            <div className="absolute bottom-full left-0 mb-2 w-32 rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700/50 dark:bg-gray-800">
               {PRIORITY_OPTIONS.map((p) => (
                 <button
                   key={p.value}
                   onClick={() => handleChangePriority(p.value)}
                   className={clsx(
-                    'flex w-full items-center px-3 py-1.5 text-xs transition-colors hover:bg-gray-700/50',
+                    'flex w-full items-center px-3 py-1.5 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-700/50',
                     p.color
                   )}
                 >
@@ -178,7 +178,7 @@ export default function BulkActions() {
             <Tag size={14} /> Tags
           </button>
           {showTagMenu && (
-            <div className="absolute bottom-full left-0 mb-2 w-48 rounded-xl border border-gray-700/50 bg-gray-800 p-3 shadow-xl">
+            <div className="absolute bottom-full left-0 mb-2 w-48 rounded-xl border border-gray-200 bg-white p-3 shadow-xl dark:border-gray-700/50 dark:bg-gray-800">
               <input
                 autoFocus
                 value={tagInput}
@@ -187,7 +187,7 @@ export default function BulkActions() {
                   if (e.key === 'Enter') handleAddTag();
                 }}
                 placeholder="Tag name..."
-                className="mb-2 w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs text-gray-200 placeholder-gray-500 outline-none focus:border-blue-500/50"
+                className="mb-2 w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 outline-none focus:border-blue-500/50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:placeholder-gray-500"
               />
               <button
                 onClick={handleAddTag}
@@ -212,10 +212,10 @@ export default function BulkActions() {
             <Folder size={14} /> Move
           </button>
           {showProjectMenu && (
-            <div className="absolute bottom-full right-0 mb-2 w-48 rounded-xl border border-gray-700/50 bg-gray-800 py-1 shadow-xl">
+            <div className="absolute bottom-full right-0 mb-2 w-48 rounded-xl border border-gray-200 bg-white py-1 shadow-xl dark:border-gray-700/50 dark:bg-gray-800">
               <button
                 onClick={() => handleMoveToProject(null)}
-                className="flex w-full items-center px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-700/50"
+                className="flex w-full items-center px-3 py-2 text-xs text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
               >
                 No project
               </button>
@@ -223,7 +223,7 @@ export default function BulkActions() {
                 <button
                   key={p.id}
                   onClick={() => handleMoveToProject(p.id)}
-                  className="flex w-full items-center px-3 py-2 text-xs text-gray-300 transition-colors hover:bg-gray-700/50"
+                  className="flex w-full items-center px-3 py-2 text-xs text-gray-600 transition-colors hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/50"
                 >
                   {p.name}
                 </button>
@@ -232,7 +232,7 @@ export default function BulkActions() {
           )}
         </div>
 
-        <div className="h-6 w-px bg-gray-700" />
+        <div className="h-6 w-px bg-gray-200 dark:bg-gray-700" />
 
         <button
           onClick={handleDelete}
@@ -243,7 +243,7 @@ export default function BulkActions() {
 
         <button
           onClick={clearSelection}
-          className="ml-1 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-700/50 hover:text-gray-300"
+          className="ml-1 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700/50 dark:hover:text-gray-300"
         >
           <X size={14} />
         </button>
