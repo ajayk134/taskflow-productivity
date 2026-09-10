@@ -218,48 +218,51 @@ export default function Header() {
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             aria-label="Notifications"
+            aria-haspopup="true"
+            aria-expanded={notificationsOpen}
             title="Notifications"
-            className="relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors"
+            className="relative flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800">
+              <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] max-w-[26rem] sm:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/30 border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+            <div className="fixed left-3 right-3 top-16 z-50 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 sm:max-w-[calc(100vw-1.5rem)] flex flex-col max-h-[min(70vh,32rem)] bg-white dark:bg-gray-800 rounded-xl shadow-xl shadow-gray-900/10 dark:shadow-black/40 border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">
                   Notifications
                 </span>
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllRead}
-                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    className="text-xs font-medium text-blue-600 dark:text-blue-400 px-3 min-h-10 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-blue-700 dark:hover:text-blue-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
                   >
                     Mark all read
                   </button>
                 )}
               </div>
-              <div className="max-h-80 overflow-y-auto overscroll-contain">
+              <div className="overflow-y-auto overscroll-contain min-h-0">
                 {notificationsLoading && (
-                  <div className="flex items-center justify-center gap-2 px-4 py-8">
+                  <div className="flex items-center justify-center gap-2 px-4 py-12">
                     <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                     <span className="text-sm text-gray-500 dark:text-gray-400">Loading...</span>
                   </div>
                 )}
 
                 {!notificationsLoading && notificationsError && (
-                  <div className="px-4 py-8 text-center">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <div className="px-4 py-12 text-center">
+                    <AlertTriangle className="w-8 h-8 mx-auto text-gray-300 dark:text-gray-600" />
+                    <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                       Could not load notifications.
                     </p>
                     <button
                       onClick={fetchNotifications}
-                      className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                      className="mt-2 text-xs font-medium text-blue-600 dark:text-blue-400 px-3 min-h-10 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-blue-700 dark:hover:text-blue-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70"
                     >
                       Try again
                     </button>
@@ -267,8 +270,8 @@ export default function Header() {
                 )}
 
                 {!notificationsLoading && !notificationsError && notifications.length === 0 && (
-                  <div className="flex flex-col items-center gap-2 px-4 py-8">
-                    <BellOff className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+                  <div className="flex flex-col items-center gap-2 px-4 py-12">
+                    <BellOff className="w-8 h-8 text-gray-300 dark:text-gray-600" />
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       No new notifications
                     </p>
@@ -280,15 +283,26 @@ export default function Header() {
                   return (
                     <div
                       key={notif._id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${notif.isRead ? 'Read' : 'Unread'} notification: ${notif.title}`}
                       onClick={() => openNotification(notif)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openNotification(notif);
+                        }
+                      }}
                       className={clsx(
-                        'flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0',
-                        !notif.isRead && 'bg-blue-50/50 dark:bg-blue-500/5'
+                        'flex items-start gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50',
+                        !notif.isRead
+                          ? 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900'
+                          : 'hover:bg-gray-50 dark:hover:bg-gray-700'
                       )}
                     >
                       <span
                         className={clsx(
-                          'mt-1 w-2 h-2 rounded-full flex-shrink-0',
+                          'mt-1.5 w-2 h-2 rounded-full flex-shrink-0',
                           notif.isRead ? 'bg-transparent' : 'bg-blue-500'
                         )}
                       />
@@ -297,18 +311,23 @@ export default function Header() {
                           'mt-0.5 flex-shrink-0 p-1 rounded-lg',
                           notif.isRead
                             ? 'text-gray-300 dark:text-gray-600'
-                            : 'text-blue-500 bg-blue-100/70 dark:bg-blue-500/10',
+                            : 'text-blue-500 bg-blue-100 dark:text-blue-300 dark:bg-blue-900',
                           !notif.type && 'hidden'
                         )}
                       >
                         <TypeIcon className="w-4 h-4" />
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                        <p className={clsx(
+                          'text-sm',
+                          notif.isRead
+                            ? 'font-medium text-gray-600 dark:text-gray-300'
+                            : 'font-semibold text-gray-900 dark:text-white'
+                        )}>
                           {notif.title}
                         </p>
                         {notif.message && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5 line-clamp-2">
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
                             {notif.message}
                           </p>
                         )}
