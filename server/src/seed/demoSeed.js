@@ -737,10 +737,15 @@ async function main() {
 
   // --- 10. Notifications ----------------------------------------------------
   const notifDefs = [
-    { type: 'reminder', title: 'Website Redesign feedback is due today', message: 'Collect stakeholder feedback on the new homepage.', entityType: 'todo', actionUrl: '/kanban' },
-    { type: 'habit', title: 'Habit streak: 14 days!', message: 'You read every day for two weeks — keep it up.', entityType: 'habit', actionUrl: '/habits' },
-    { type: 'overdue', title: 'Transfer savings is overdue', message: 'Mark it done or snooze it.', entityType: 'todo', actionUrl: '/my-day' },
-    { type: 'system', title: 'Welcome to Donezo', message: 'Explore Kanban, Habits, Goals, and Analytics to get the most out of your plan.', entityType: 'system', actionUrl: '/inbox', isRead: true },
+    { type: 'reminder', title: 'Website Redesign feedback is due today', message: 'Collect stakeholder feedback on the new homepage.', entityType: 'todo', actionUrl: '/kanban', createdAt: daysFromNow(0, 8, 30) },
+    { type: 'habit', title: 'Habit streak: 14 days!', message: 'You read every day for two weeks — keep it up.', entityType: 'habit', actionUrl: '/habits', createdAt: daysFromNow(0, 7, 15) },
+    { type: 'suggestion', title: 'Plan your day', message: 'You have 5 tasks due today. Add a couple to My Day to get started.', entityType: 'system', actionUrl: '/my-day', createdAt: daysFromNow(0, 6, 0) },
+    { type: 'overdue', title: 'Transfer savings is overdue', message: 'Mark it done or snooze it.', entityType: 'todo', actionUrl: '/my-day', createdAt: daysFromNow(-1, 9, 0) },
+    { type: 'overdue', title: 'Replace the leaking kitchen faucet is overdue', message: 'Mark it done or snooze it.', entityType: 'todo', actionUrl: '/my-day', createdAt: daysFromNow(-2, 12, 45) },
+    { type: 'daily-planning', title: 'Review your daily plan', message: 'A quick weekly review keeps your plan on track.', entityType: 'system', actionUrl: '/inbox', createdAt: daysFromNow(-3, 17, 20) },
+    { type: 'system', title: 'Welcome to Donezo', message: 'Explore Kanban, Habits, Goals, and Analytics to get the most out of your plan.', entityType: 'system', actionUrl: '/inbox', isRead: true, createdAt: daysFromNow(-5, 10, 0) },
+    { type: 'habit', title: 'Reading streak: 7 days', message: 'Nice momentum — keep the streak alive.', entityType: 'habit', actionUrl: '/habits', isRead: true, createdAt: daysFromNow(-7, 8, 0) },
+    { type: 'reminder', title: 'Monthly budget check-in complete', message: 'You reconciled last month’s budget vs actuals.', entityType: 'todo', actionUrl: '/projects', isRead: true, createdAt: daysFromNow(-10, 14, 0) },
   ];
   await save(Notification, notifDefs.map((n) => ({ ...n, userId })));
   console.log(`Created ${notifDefs.length} notifications`);

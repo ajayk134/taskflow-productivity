@@ -17,11 +17,17 @@ export const getNotifications = async (req, res) => {
 
 export const markAsRead = async (req, res) => {
   try {
-    await Notification.findOneAndUpdate(
+    const notification = await Notification.findOneAndUpdate(
       { _id: req.params.id, userId: req.userId },
-      { isRead: true }
+      { $set: { isRead: true } },
+      { new: true }
     );
-    res.json({ message: 'Marked as read' });
+
+    if (!notification) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+
+    res.json({ success: true, notification });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -29,11 +35,12 @@ export const markAsRead = async (req, res) => {
 
 export const markAllAsRead = async (req, res) => {
   try {
-    await Notification.updateMany(
+    const result = await Notification.updateMany(
       { userId: req.userId, isRead: false },
-      { isRead: true }
+      { $set: { isRead: true } }
     );
-    res.json({ message: 'All marked as read' });
+
+    res.json({ success: true, modified: result.modifiedCount });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -41,8 +48,11 @@ export const markAllAsRead = async (req, res) => {
 
 export const deleteNotification = async (req, res) => {
   try {
-    await Notification.findOneAndDelete({ _id: req.params.id, userId: req.userId });
-    res.json({ message: 'Notification deleted' });
+    const notification = await Notification.findOneAndDelete({ _id: req.params.id, userId: req.userId });
+    if (!notification) {
+      return res.status(404).json({ error: 'Notification not found' });
+    }
+    res.json({ success: true, message: 'Notification deleted' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

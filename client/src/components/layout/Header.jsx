@@ -12,10 +12,19 @@ import {
   User,
   Settings,
   ChevronDown,
+  AlarmClock,
+  AlertTriangle,
+  Lightbulb,
+  Info,
+  Flame,
+  CalendarDays,
+  BellOff,
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import useUIStore from '../../stores/uiStore';
 import useAuthStore from '../../stores/authStore';
+import useNotificationStore from '../../stores/notificationStore';
 
 const viewTitles = {
   inbox: 'Inbox',
@@ -34,9 +43,36 @@ const viewTitles = {
   settings: 'Settings',
 };
 
+const notificationTypeIcon = {
+  reminder: AlarmClock,
+  overdue: AlertTriangle,
+  suggestion: Lightbulb,
+  system: Info,
+  habit: Flame,
+  'daily-planning': CalendarDays,
+};
+
+function formatRelativeTime(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${formatDistanceToNow(date, { addSuffix: true })}`;
+}
+
 export default function Header() {
   const { toggleSidebar, theme, setTheme, toggleCommandPalette } = useUIStore();
   const { user, logout } = useAuthStore();
+  const {
+    notifications,
+    unreadCount,
+    isLoading: notificationsLoading,
+    hasLoaded,
+    error: notificationsError,
+    fetchNotifications,
+    markAsRead,
+    markAllAsRead,
+    reset: resetNotifications,
+  } = useNotificationStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchFocused, setSearchFocused] = useState(false);
@@ -76,13 +112,33 @@ export default function Header() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleCommandPalette]);
 
-  const notifications = [
-    { id: 1, text: 'Task "Review PR" is due today', time: '2m ago', read: false },
-    { id: 2, text: 'Project "Website Redesign" updated', time: '1h ago', read: false },
-    { id: 3, text: 'Habit "Exercise" streak: 7 days!', time: '3h ago', read: true },
-  ];
+  useEffect(() => {
+    if (!hasLoaded && !notificationsLoading) {
+      fetchNotifications();
+    }
+  }, [hasLoaded, notificationsLoading, fetchNotifications]);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const openNotification = (notif) => {
+    if (!notif.isRead) {
+      markAsRead(notif._id);
+    }
+    setNotificationsOpen(false);
+    if (notif.actionUrl) {
+      navigate(notif.actionUrl);
+    }
+  };
+
+  const handleMarkAllRead = () => {
+    if (unreadCount > 0) {
+      markAllAsRead();
+    }
+  };
+
+  const handleLogout = () => {
+    setMenuOpen(false);
+    resetNotifications();
+    logout();
+  };
 
   return (
     <header className="flex items-center h-14 sm:h-16 px-3 sm:px-6 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm gap-1 sm:gap-2">
@@ -167,47 +223,104 @@ export default function Header() {
           >
             <Bell className="w-5 h-5" />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex items-center justify-center w-4 h-4 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800">
-                {unreadCount}
+              <span className="absolute top-1 right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-800">
+                {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
           </button>
 
           {notificationsOpen && (
             <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] max-w-[26rem] sm:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/30 border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                  Notifications
-                </span>
-                <button className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
-                  Mark all read
-                </button>
-              </div>
-              <div className="max-h-72 overflow-y-auto">
-                {notifications.map((notif) => (
-                  <div
-                    key={notif.id}
-                    className={clsx(
-                      'flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0',
-                      !notif.read && 'bg-blue-50/50 dark:bg-blue-500/5'
-                    )}
+              {unreadCount > 0 && (
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                    Notifications
+                  </span>
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    <div
-                      className={clsx(
-                        'w-2 h-2 rounded-full mt-1.5 flex-shrink-0',
-                        notif.read ? 'bg-transparent' : 'bg-blue-500'
-                      )}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-700 dark:text-gray-300">
-                        {notif.text}
-                      </p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-                        {notif.time}
-                      </p>
-                    </div>
+                    Mark all read
+                  </button>
+                </div>
+              )}
+              <div className="max-h-80 overflow-y-auto overscroll-contain">
+                {notificationsLoading && (
+                  <div className="flex items-center justify-center gap-2 px-4 py-8">
+                    <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Loading...</span>
                   </div>
-                ))}
+                )}
+
+                {!notificationsLoading && notificationsError && (
+                  <div className="px-4 py-8 text-center">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Could not load notifications.
+                    </p>
+                    <button
+                      onClick={fetchNotifications}
+                      className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Try again
+                    </button>
+                  </div>
+                )}
+
+                {!notificationsLoading && !notificationsError && notifications.length === 0 && (
+                  <div className="flex flex-col items-center gap-2 px-4 py-8">
+                    <BellOff className="w-6 h-6 text-gray-300 dark:text-gray-600" />
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      No new notifications
+                    </p>
+                  </div>
+                )}
+
+                {!notificationsLoading && !notificationsError && notifications.map((notif) => {
+                  const TypeIcon = notificationTypeIcon[notif.type] || Info;
+                  return (
+                    <div
+                      key={notif._id}
+                      onClick={() => openNotification(notif)}
+                      className={clsx(
+                        'flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors border-b border-gray-50 dark:border-gray-700/50 last:border-0',
+                        !notif.isRead && 'bg-blue-50/50 dark:bg-blue-500/5'
+                      )}
+                    >
+                      <span
+                        className={clsx(
+                          'mt-1 w-2 h-2 rounded-full flex-shrink-0',
+                          notif.isRead ? 'bg-transparent' : 'bg-blue-500'
+                        )}
+                      />
+                      <span
+                        className={clsx(
+                          'mt-0.5 flex-shrink-0 p-1 rounded-lg',
+                          notif.isRead
+                            ? 'text-gray-300 dark:text-gray-600'
+                            : 'text-blue-500 bg-blue-100/70 dark:bg-blue-500/10',
+                          !notif.type && 'hidden'
+                        )}
+                      >
+                        <TypeIcon className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                          {notif.title}
+                        </p>
+                        {notif.message && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-0.5 line-clamp-2">
+                            {notif.message}
+                          </p>
+                        )}
+                        {formatRelativeTime(notif.createdAt) && (
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            {formatRelativeTime(notif.createdAt)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -256,10 +369,7 @@ export default function Header() {
               </button>
               <div className="my-1 border-t border-gray-100 dark:border-gray-700" />
               <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  logout();
-                }}
+                onClick={handleLogout}
                 className="flex items-center gap-3 w-full px-3.5 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
               >
                 <LogOut className="w-4 h-4" />

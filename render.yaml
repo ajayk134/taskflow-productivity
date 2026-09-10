@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: productivity-app
+    name: donezo
     runtime: node
     domains:
       - donezo.duckdns.org

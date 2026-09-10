@@ -3,6 +3,7 @@ import request from 'supertest';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import jwt from 'jsonwebtoken';
+import Notification from '../models/Notification.js';
 
 let mongod;
 let app;
@@ -1232,13 +1233,31 @@ describe('Activity API', () => {
 
 describe('Notifications API', () => {
   let token;
+  let userId;
+
+  async function createNotification(overrides = {}) {
+    return Notification.create({
+      userId,
+      type: 'system',
+      title: 'Test notification',
+      message: 'Hello from the test suite',
+      entityType: '',
+      isRead: false,
+      actionUrl: '',
+      ...overrides,
+    });
+  }
 
   beforeEach(async () => {
     const { res } = await registerUser({ email: `notif-${Date.now()}@example.com` });
     token = res.body.token;
+    userId = res.body.user.id;
   });
 
-  it('GET /api/notifications returns notifications', async () => {
+  it('GET /api/notifications returns notifications for the authenticated user', async () => {
+    await createNotification({ title: 'Unread one', isRead: false });
+    await createNotification({ title: 'Read one', isRead: true });
+
     const res = await request(app)
       .get('/api/notifications')
       .set('Authorization', `Bearer ${token}`);
@@ -1246,6 +1265,163 @@ describe('Notifications API', () => {
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.notifications)).toBe(true);
     expect(typeof res.body.unreadCount).toBe('number');
+    expect(res.body.notifications.length).toBe(2);
+    expect(res.body.unreadCount).toBe(1);
+    expect(res.body.notifications.find((n) => n.title === 'Read one').isRead).toBe(true);
+  });
+
+  it('notification data matches the expected response format', async () => {
+    await createNotification({ title: 'Shape check', message: 'details', type: 'reminder', actionUrl: '/my-day' });
+
+    const res = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${token}`);
+
+    const [n] = res.body.notifications;
+    expect(n).toMatchObject({
+      _id: expect.any(String),
+      type: 'reminder',
+      title: 'Shape check',
+      message: 'details',
+      isRead: false,
+      actionUrl: '/my-day',
+    });
+    expect(n.createdAt).toBeDefined();
+    expect(typeof n.userId).toBe('string');
+  });
+
+  it('rejects unauthenticated notification requests', async () => {
+    const res = await request(app).get('/api/notifications');
+    expect(res.status).toBe(401);
+
+    const readAll = await request(app).post('/api/notifications/read-all');
+    expect(readAll.status).toBe(401);
+  });
+
+  it('user cannot see another user\'s notifications', async () => {
+    await createNotification({ title: 'My private notification' });
+
+    const other = await registerUser({ email: `notif-other-${Date.now()}@example.com` });
+    const otherToken = other.res.body.token;
+
+    const res = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${otherToken}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.notifications).toEqual([]);
+    expect(res.body.unreadCount).toBe(0);
+  });
+
+  it('POST /api/notifications/read-all marks all of the user\'s notifications as read', async () => {
+    await createNotification({ title: 'N1', isRead: false });
+    await createNotification({ title: 'N2', isRead: false });
+    await createNotification({ title: 'N3', isRead: true });
+
+    const res = await request(app)
+      .post('/api/notifications/read-all')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.modified).toBe(2);
+
+    const list = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(list.body.unreadCount).toBe(0);
+    expect(list.body.notifications.every((n) => n.isRead === true)).toBe(true);
+  });
+
+  it('mark-all only changes the authenticated user\'s notifications', async () => {
+    const other = await registerUser({ email: `notif-other2-${Date.now()}@example.com` });
+
+    await createNotification({ title: 'Mine', isRead: false });
+    await Notification.create({
+      userId: other.res.body.user.id,
+      type: 'system',
+      title: 'Theirs',
+      message: '',
+      entityType: '',
+      isRead: false,
+      actionUrl: '',
+    });
+
+    await request(app)
+      .post('/api/notifications/read-all')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const mine = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(mine.body.unreadCount).toBe(0);
+
+    const theirs = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${other.res.body.token}`);
+
+    expect(theirs.body.unreadCount).toBe(1);
+  });
+
+  it('POST /api/notifications/:id/read marks a single notification as read', async () => {
+    const created = await createNotification({ title: 'Read me', isRead: false });
+
+    const res = await request(app)
+      .post(`/api/notifications/${created._id}/read`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.notification.isRead).toBe(true);
+
+    const list = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(list.body.unreadCount).toBe(0);
+    expect(list.body.notifications[0].isRead).toBe(true);
+  });
+
+  it('cannot mark another user\'s notification as read', async () => {
+    const other = await registerUser({ email: `notif-other3-${Date.now()}@example.com` });
+
+    const created = await Notification.create({
+      userId: other.res.body.user.id,
+      type: 'system',
+      title: 'Not mine',
+      message: '',
+      entityType: '',
+      isRead: false,
+      actionUrl: '',
+    });
+
+    const res = await request(app)
+      .post(`/api/notifications/${created._id}/read`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(404);
+
+    const stillThere = await Notification.findById(created._id);
+    expect(stillThere.isRead).toBe(false);
+  });
+
+  it('already-read notifications remain read after mark-all', async () => {
+    await createNotification({ title: 'Already read', isRead: true });
+    await createNotification({ title: 'Will be read', isRead: false });
+
+    await request(app)
+      .post('/api/notifications/read-all')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const list = await request(app)
+      .get('/api/notifications')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(list.body.unreadCount).toBe(0);
   });
 });
 
