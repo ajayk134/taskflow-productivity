@@ -231,19 +231,19 @@ export default function Header() {
 
           {notificationsOpen && (
             <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] max-w-[26rem] sm:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-xl shadow-black/10 dark:shadow-black/30 border border-gray-200 dark:border-gray-700 z-50 overflow-hidden">
-              {unreadCount > 0 && (
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                    Notifications
-                  </span>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  Notifications
+                </span>
+                {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllRead}
                     className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     Mark all read
                   </button>
-                </div>
-              )}
+                )}
+              </div>
               <div className="max-h-80 overflow-y-auto overscroll-contain">
                 {notificationsLoading && (
                   <div className="flex items-center justify-center gap-2 px-4 py-8">
