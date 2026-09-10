@@ -1,0 +1,21 @@
+{
+  "name": "taskflow-productivity",
+  "version": "1.0.0",
+  "description": "TaskFlow - Premium personal productivity platform",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && npm run dev",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "test": "cd server && npm test",
+    "test:client": "cd client && npm test",
+    "lint": "cd client && npm run lint",
+    "typecheck": "cd client && npx tsc --noEmit",
+    "setup": "npm install && cd server && npm install && cd ../client && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
