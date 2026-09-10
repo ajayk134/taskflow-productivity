@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -79,8 +80,12 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifPanelPos, setNotifPanelPos] = useState({ top: 0, right: 0 });
+  const [notifPanelReady, setNotifPanelReady] = useState(false);
   const menuRef = useRef(null);
   const notifRef = useRef(null);
+  const notifPanelRef = useRef(null);
+  const bellBtnRef = useRef(null);
   const searchRef = useRef(null);
 
   const pathParts = location.pathname.split('/').filter(Boolean);
@@ -93,13 +98,39 @@ export default function Header() {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
       }
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
+      const inNotif = notifRef.current && notifRef.current.contains(e.target);
+      const inPanel = notifPanelRef.current && notifPanelRef.current.contains(e.target);
+      if (!inNotif && !inPanel) {
         setNotificationsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  useEffect(() => {
+    if (!notificationsOpen) {
+      setNotifPanelReady(false);
+      return undefined;
+    }
+    const measure = () => {
+      const bell = bellBtnRef.current;
+      if (!bell) return;
+      const rect = bell.getBoundingClientRect();
+      setNotifPanelPos({
+        top: rect.bottom + 8,
+        right: Math.max(0, window.innerWidth - rect.right),
+      });
+      setNotifPanelReady(true);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+  }, [notificationsOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -216,6 +247,7 @@ export default function Header() {
 
         <div className="relative" ref={notifRef}>
           <button
+            ref={bellBtnRef}
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             aria-label="Notifications"
             aria-haspopup="true"
@@ -231,9 +263,19 @@ export default function Header() {
             )}
           </button>
 
-          {notificationsOpen && (
-            <div className="fixed left-3 right-3 top-16 z-50 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96 sm:max-w-[calc(100vw-1.5rem)] flex flex-col max-h-[min(70vh,32rem)] bg-white dark:bg-gray-800 rounded-xl shadow-xl shadow-gray-900/10 dark:shadow-black/40 border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+          {notificationsOpen &&
+            notifPanelReady &&
+            createPortal(
+              <div
+                ref={notifPanelRef}
+                style={
+                  typeof window !== 'undefined' && window.innerWidth >= 640
+                    ? { top: `${notifPanelPos.top}px`, right: `${notifPanelPos.right}px` }
+                    : undefined
+                }
+                className="fixed inset-x-3 top-16 z-[90] flex max-h-[min(70vh,32rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-900/15 sm:inset-x-auto sm:top-auto sm:w-96 sm:max-w-[calc(100vw-1.5rem)] dark:border-gray-700 dark:bg-gray-800 dark:shadow-black/50"
+              >
+              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-100 px-4 py-2.5 dark:border-gray-700">
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">
                   Notifications
                 </span>
@@ -246,7 +288,7 @@ export default function Header() {
                   </button>
                 )}
               </div>
-              <div className="overflow-y-auto overscroll-contain min-h-0">
+              <div className="min-h-0 overflow-y-auto overscroll-contain">
                 {notificationsLoading && (
                   <div className="flex items-center justify-center gap-2 px-4 py-12">
                     <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -294,7 +336,7 @@ export default function Header() {
                         }
                       }}
                       className={clsx(
-                        'flex items-start gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50',
+                        'flex items-start gap-3 px-4 py-3 min-h-[3.25rem] border-b border-gray-100 dark:border-gray-700 last:border-b-0 cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/50',
                         !notif.isRead
                           ? 'bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900'
                           : 'hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -341,7 +383,8 @@ export default function Header() {
                   );
                 })}
               </div>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
 
