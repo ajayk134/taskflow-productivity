@@ -90,6 +90,14 @@ todoSchema.virtual('completed').get(function() {
   return this.status === 'completed';
 });
 
+// Virtual populated with the project name so the client can group by project
+todoSchema.virtual('projectName', {
+  ref: 'Project',
+  localField: 'projectId',
+  foreignField: '_id',
+  justOne: true
+});
+
 todoSchema.virtual('deleted').get(function() {
   return this.deletedAt != null;
 });

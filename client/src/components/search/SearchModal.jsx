@@ -117,8 +117,8 @@ export default function SearchModal({ isOpen, onClose }) {
 
   const handleSelect = useCallback((todo) => {
     onClose();
-    if (todo.project) {
-      navigate(`/projects/${todo.project}`);
+    if (todo.projectId) {
+      navigate(`/projects/${todo.projectId}`);
     } else {
       navigate('/inbox');
     }

@@ -155,7 +155,7 @@ export const getTodos = async (req, res) => {
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const [todos, total] = await Promise.all([
-      Todo.find(query).sort(sortObj).skip(skip).limit(parseInt(limit)),
+      Todo.find(query).populate('projectName', 'name').sort(sortObj).skip(skip).limit(parseInt(limit)),
       Todo.countDocuments(query)
     ]);
 
