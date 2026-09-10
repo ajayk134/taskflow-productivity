@@ -20,7 +20,7 @@ export default function MyDay() {
   }, [fetchTodos, fetchMyDay]);
 
   const myDayTodos = useMemo(
-    () => todos.filter((t) => t.isInMyDay && t.status !== 'completed' && t.status !== 'trashed'),
+    () => todos.filter((t) => t.isMyDay && t.status !== 'completed' && t.status !== 'trashed'),
     [todos]
   );
 
@@ -33,7 +33,7 @@ export default function MyDay() {
           !isToday(parseISO(t.dueDate)) &&
           t.status !== 'completed' &&
           t.status !== 'trashed' &&
-          !t.isInMyDay
+          !t.isMyDay
       ),
     [todos]
   );
@@ -46,7 +46,7 @@ export default function MyDay() {
           isToday(parseISO(t.dueDate)) &&
           t.status !== 'completed' &&
           t.status !== 'trashed' &&
-          !t.isInMyDay
+          !t.isMyDay
       ),
     [todos]
   );

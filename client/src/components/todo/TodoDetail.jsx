@@ -38,10 +38,15 @@ const PRIORITY_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
+  { value: 'inbox', label: 'Inbox' },
+  { value: 'planned', label: 'Planned' },
+  { value: 'next', label: 'Next' },
+  { value: 'in-progress', label: 'In Progress' },
+  { value: 'waiting', label: 'Waiting' },
+  { value: 'blocked', label: 'Blocked' },
+  { value: 'review', label: 'Review' },
   { value: 'completed', label: 'Completed' },
-  { value: 'cancelled', label: 'Cancelled' },
+  { value: 'archived', label: 'Archived' },
 ];
 
 function EditableTitle({ value, onSave }) {
@@ -238,8 +243,13 @@ export default function TodoDetail({ todo, onClose }) {
   };
 
   const handleDelete = async () => {
-    await deleteTodo(todo.id);
-    toast.success('Task deleted');
+    if (local.deletedAt) {
+      await deleteTodo(todo.id, { permanent: true });
+      toast.success('Task permanently deleted');
+    } else {
+      await deleteTodo(todo.id);
+      toast.success('Task deleted');
+    }
     onClose();
   };
 
@@ -319,7 +329,7 @@ export default function TodoDetail({ todo, onClose }) {
 
   if (!todo) return null;
 
-  const isTrashed = local.status === 'trashed';
+  const isTrashed = Boolean(local.deletedAt);
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -361,12 +371,12 @@ export default function TodoDetail({ todo, onClose }) {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => {
-                  update('isInMyDay', !local.isInMyDay);
-                  save('isInMyDay');
+                  update('isMyDay', !local.isMyDay);
+                  save('isMyDay');
                 }}
                 className={clsx(
                   'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all',
-                  local.isInMyDay
+                  local.isMyDay
                     ? 'border-amber-500/30 bg-amber-500/10 text-amber-400'
                     : 'border-gray-700 text-gray-400 hover:border-gray-600'
                 )}
@@ -433,7 +443,7 @@ export default function TodoDetail({ todo, onClose }) {
             <div>
               <label className="mb-2 block text-xs font-medium text-gray-400">Status</label>
               <select
-                value={local.status || 'pending'}
+                value={local.status || 'inbox'}
                 onChange={(e) => {
                   update('status', e.target.value);
                   save('status');
@@ -608,17 +618,17 @@ export default function TodoDetail({ todo, onClose }) {
                 <Repeat size={12} /> Recurrence
               </label>
               <select
-                value={local.recurrence || ''}
+                value={local.recurrence?.type || ''}
                 onChange={(e) => {
-                  update('recurrence', e.target.value || null);
+                  update('recurrence', e.target.value ? { type: e.target.value, interval: 1 } : null);
                   save('recurrence');
                 }}
                 className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 outline-none focus:border-blue-500/50"
               >
                 <option value="">Does not repeat</option>
                 <option value="daily">Daily</option>
+                <option value="weekdays">Every weekday</option>
                 <option value="weekly">Weekly</option>
-                <option value="biweekly">Every 2 weeks</option>
                 <option value="monthly">Monthly</option>
                 <option value="yearly">Yearly</option>
               </select>

@@ -3,6 +3,54 @@ import Activity from '../models/Activity.js';
 import Tag from '../models/Tag.js';
 import { parseNaturalLanguage, getStartOfDay, getEndOfDay, getStartOfWeek, getEndOfWeek } from '../utils/helpers.js';
 
+const VALID_STATUSES = ['inbox', 'planned', 'next', 'in-progress', 'waiting', 'blocked', 'completed', 'archived', 'review'];
+const STATUS_ALIASES = {
+  pending: 'inbox',
+  in_progress: 'in-progress',
+  'in progress': 'in-progress',
+  todo: 'planned',
+  done: 'completed',
+  'in review': 'review'
+};
+
+const normalizeStatus = (status) => {
+  if (status === undefined || status === null) return undefined;
+  const normalized = String(status).toLowerCase().trim();
+  return STATUS_ALIASES[normalized] || normalized;
+};
+
+// Resolves a request payload into a final { status, completedAt } pair.
+// Supports the client's boolean `completed` flag plus status aliases like
+// `pending` / `in_progress`. Returns null updates when nothing changes.
+const resolveCompletion = (body, oldTodo = {}) => {
+  const updates = {};
+  let status = normalizeStatus(body.status);
+
+  if (status !== undefined && !VALID_STATUSES.includes(status)) {
+    return { error: `Invalid status: ${body.status}` };
+  }
+
+  if (body.completed === true) {
+    status = 'completed';
+  } else if (body.completed === false && status === undefined) {
+    status = oldTodo.status === 'completed' ? 'inbox' : oldTodo.status || 'inbox';
+  }
+
+  if (status !== undefined) {
+    if (status === 'completed' && oldTodo.status !== 'completed') {
+      updates.status = 'completed';
+      updates.completedAt = new Date();
+    } else if (status !== 'completed' && oldTodo.status === 'completed') {
+      updates.status = status;
+      updates.completedAt = null;
+    } else if (status !== 'completed') {
+      updates.status = status;
+    }
+  }
+
+  return { error: null, updates, status };
+};
+
 const logActivity = async (userId, action, entityType, entityId, entityTitle, details = {}) => {
   try {
     await Activity.create({ userId, action, entityType, entityId, entityTitle, details });
@@ -30,6 +78,11 @@ export const createTodo = async (req, res) => {
 
     todoData.title = todoData.title.trim();
 
+    const resolved = resolveCompletion(todoData, {});
+    if (resolved.error) return res.status(400).json({ error: resolved.error });
+    delete todoData.completed;
+    Object.assign(todoData, resolved.updates);
+
     // Get max order for positioning
     const maxOrder = await Todo.findOne({ userId: req.userId, status: todoData.status || 'inbox' })
       .sort({ order: -1 }).select('order');
@@ -51,6 +104,18 @@ export const createTodo = async (req, res) => {
     await logActivity(req.userId, 'created', 'todo', todo._id, todo.title);
 
     res.status(201).json({ todo });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const parseTodo = async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || !String(text).trim()) {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+    res.json({ parsed: parseNaturalLanguage(String(text)) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -117,12 +182,20 @@ export const updateTodo = async (req, res) => {
 
     const updates = { ...req.body };
     delete updates.userId;
+    delete updates.completed;
+
+    // Normalize status aliases and boolean `completed` before the change logic below
+    const resolved = resolveCompletion(req.body, oldTodo);
+    if (resolved.error) return res.status(400).json({ error: resolved.error });
+    delete updates.status;
+    Object.assign(updates, resolved.updates);
 
     // Track status change
-    if (updates.status === 'completed' && oldTodo.status !== 'completed') {
+    const newStatus = updates.status ?? oldTodo.status;
+    if (newStatus === 'completed' && oldTodo.status !== 'completed') {
       updates.completedAt = new Date();
       await logActivity(req.userId, 'completed', 'todo', oldTodo._id, oldTodo.title);
-    } else if (updates.status && updates.status !== oldTodo.status && oldTodo.status === 'completed') {
+    } else if (newStatus !== oldTodo.status && oldTodo.status === 'completed') {
       updates.completedAt = null;
       await logActivity(req.userId, 'reopened', 'todo', oldTodo._id, oldTodo.title);
     }
@@ -169,7 +242,7 @@ export const deleteTodo = async (req, res) => {
     await Todo.findByIdAndUpdate(req.params.id, { deletedAt: new Date() });
     await logActivity(req.userId, 'deleted', 'todo', todo._id, todo.title);
 
-    res.json({ message: 'Todo moved to trash', todoId: req.params.id });
+    res.json({ message: 'Todo moved to trash', todo, todoId: req.params.id });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -228,13 +301,16 @@ export const duplicateTodo = async (req, res) => {
 
 export const archiveTodo = async (req, res) => {
   try {
-    const todo = await Todo.findOne({ _id: req.params.id, userId: req.userId });
+    const todo = await Todo.findOneAndUpdate(
+      { _id: req.params.id, userId: req.userId },
+      { status: 'archived', archivedAt: new Date() },
+      { new: true }
+    );
     if (!todo) return res.status(404).json({ error: 'Todo not found' });
 
-    await Todo.findByIdAndUpdate(req.params.id, { status: 'archived', archivedAt: new Date() });
     await logActivity(req.userId, 'archived', 'todo', todo._id, todo.title);
 
-    res.json({ message: 'Todo archived' });
+    res.json({ message: 'Todo archived', todo });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -246,13 +322,18 @@ export const snoozeTodo = async (req, res) => {
     const todo = await Todo.findOne({ _id: req.params.id, userId: req.userId });
     if (!todo) return res.status(404).json({ error: 'Todo not found' });
 
-    const snoozeDate = new Date(unil || Date.now() + 24 * 60 * 60 * 1000);
-    await Todo.findByIdAndUpdate(req.params.id, {
-      dueDate: snoozeDate,
-      reminder: snoozeDate
-    });
+    const snoozeDate = new Date(until || Date.now() + 24 * 60 * 60 * 1000);
+    if (Number.isNaN(snoozeDate.getTime())) {
+      return res.status(400).json({ error: 'Invalid date provided' });
+    }
 
-    res.json({ message: 'Todo snoozed', until: snoozeDate });
+    const updated = await Todo.findOneAndUpdate(
+      { _id: req.params.id, userId: req.userId },
+      { dueDate: snoozeDate, reminder: snoozeDate },
+      { new: true }
+    );
+
+    res.json({ message: 'Todo snoozed', until: snoozeDate, todo: updated });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -263,9 +344,21 @@ export const bulkUpdateTodos = async (req, res) => {
     const { ids, updates } = req.body;
     if (!ids?.length) return res.status(400).json({ error: 'No todo IDs provided' });
 
+    const cleanUpdates = { ...updates };
+    delete cleanUpdates.userId;
+    delete cleanUpdates.completed;
+
+    if (cleanUpdates.status !== undefined) {
+      const status = normalizeStatus(cleanUpdates.status);
+      if (!VALID_STATUSES.includes(status)) {
+        return res.status(400).json({ error: `Invalid status: ${cleanUpdates.status}` });
+      }
+      cleanUpdates.status = status;
+    }
+
     const result = await Todo.updateMany(
       { _id: { $in: ids }, userId: req.userId },
-      { $set: updates }
+      { $set: cleanUpdates }
     );
 
     res.json({ updated: result.modifiedCount });

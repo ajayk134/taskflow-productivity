@@ -21,7 +21,7 @@ const todoSchema = new mongoose.Schema({
   priority: { type: Number, enum: [1, 2, 3, 4], default: 3 },
   status: {
     type: String,
-    enum: ['inbox', 'planned', 'next', 'in-progress', 'waiting', 'blocked', 'completed', 'archived'],
+    enum: ['inbox', 'planned', 'next', 'in-progress', 'waiting', 'blocked', 'review', 'completed', 'archived'],
     default: 'inbox',
     index: true
   },
@@ -83,6 +83,15 @@ todoSchema.virtual('checklistProgress').get(function() {
   if (!this.checklist || this.checklist.length === 0) return null;
   const checked = this.checklist.filter(c => c.checked).length;
   return { checked, total: this.checklist.length };
+});
+
+// Virtual boolean mirroring completion status (client expects todo.completed)
+todoSchema.virtual('completed').get(function() {
+  return this.status === 'completed';
+});
+
+todoSchema.virtual('deleted').get(function() {
+  return this.deletedAt != null;
 });
 
 todoSchema.set('toJSON', { virtuals: true });

@@ -46,7 +46,12 @@ const useTodoStore = create((set, get) => ({
     return todo;
   },
 
-  deleteTodo: async (id) => {
+  deleteTodo: async (id, options = {}) => {
+    if (options.permanent) {
+      await api.post(`/todos/${id}/permanent-delete`);
+      set(state => ({ trash: state.trash.filter(t => t._id !== id) }));
+      return;
+    }
     await api.delete(`/todos/${id}`);
     set(state => ({ todos: state.todos.filter(t => t._id !== id) }));
   },

@@ -93,7 +93,10 @@ export default function Settings() {
 
   const handleExportData = async () => {
     try {
-      const blob = await api.get('/export');
+      const data = await api.get('/search/export');
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json',
+      });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -116,7 +119,7 @@ export default function Settings() {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        await api.post('/import', data);
+        await api.post('/search/import', { data });
         toast.success('Data imported successfully');
       } catch {
         toast.error('Failed to import data');

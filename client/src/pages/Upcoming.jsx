@@ -9,7 +9,7 @@ import { Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
 import {
   format,
   isThisWeek,
-  isNextWeek,
+  differenceInCalendarWeeks,
   isToday,
   parseISO,
   startOfWeek,
@@ -43,7 +43,9 @@ export default function Upcoming() {
     return todos.filter(
       (t) =>
         t.dueDate &&
-        isNextWeek(parseISO(t.dueDate), { weekStartsOn: 1 }) &&
+        differenceInCalendarWeeks(parseISO(t.dueDate), new Date(), {
+          weekStartsOn: 1,
+        }) === 1 &&
         t.status !== 'completed' &&
         t.status !== 'trashed'
     );

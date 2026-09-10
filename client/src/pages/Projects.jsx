@@ -97,8 +97,8 @@ export default function Projects() {
   };
 
   const getProgress = (project) => {
-    const total = project.taskCount || 0;
-    const completed = project.completedCount || 0;
+    const total = project.totalTodos || 0;
+    const completed = project.completedTodos || 0;
     return total > 0 ? Math.round((completed / total) * 100) : 0;
   };
 
@@ -160,7 +160,7 @@ export default function Projects() {
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{project.name}</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{project.taskCount || 0} tasks</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{project.totalTodos || 0} tasks</p>
                   </div>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -201,7 +201,7 @@ export default function Projects() {
               <div className="flex items-center justify-between mt-3 text-[11px] text-gray-400">
                 <span className="flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
-                  {project.completedCount || 0} done
+                  {project.completedTodos || 0} done
                 </span>
                 {project.status === 'completed' && (
                   <span className="flex items-center gap-1 text-green-500">

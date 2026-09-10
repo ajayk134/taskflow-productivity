@@ -13,7 +13,7 @@ export default function Inbox() {
   const [selectedTodo, setSelectedTodo] = useState(null);
 
   useEffect(() => {
-    fetchTodos({ projectId: null, status: 'pending' });
+    fetchTodos();
   }, [fetchTodos]);
 
   const inboxTodos = todos.filter(

@@ -208,6 +208,60 @@ describe('Todos API', () => {
       expect(res.body.todo.tags).toContain('work');
       expect(res.body.todo.dueDate).toBeDefined();
     });
+
+    it('creates a completed todo via boolean flag', async () => {
+      const res = await request(app)
+        .post('/api/todos')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Already done', completed: true });
+
+      expect(res.status).toBe(201);
+      expect(res.body.todo.status).toBe('completed');
+      expect(res.body.todo.completedAt).toBeDefined();
+      expect(res.body.todo.completed).toBe(true);
+    });
+
+    it('normalizes status alias pending to inbox', async () => {
+      const res = await request(app)
+        .post('/api/todos')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Alias status', status: 'pending' });
+
+      expect(res.status).toBe(201);
+      expect(res.body.todo.status).toBe('inbox');
+    });
+
+    it('rejects an invalid status', async () => {
+      const res = await request(app)
+        .post('/api/todos')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Bad status', status: 'not-a-real-status' });
+
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe('POST /api/todos/parse', () => {
+    it('parses natural language text', async () => {
+      const res = await request(app)
+        .post('/api/todos/parse')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ text: 'Plan launch p1 tomorrow #marketing' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.parsed.priority).toBe(1);
+      expect(res.body.parsed.tags).toContain('marketing');
+      expect(res.body.parsed.dueDate).toBeTruthy();
+    });
+
+    it('rejects empty text', async () => {
+      const res = await request(app)
+        .post('/api/todos/parse')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ text: '   ' });
+
+      expect(res.status).toBe(400);
+    });
   });
 
   describe('GET /api/todos', () => {
@@ -286,6 +340,58 @@ describe('Todos API', () => {
       expect(res.status).toBe(200);
       expect(res.body.todo.status).toBe('completed');
       expect(res.body.todo.completedAt).toBeDefined();
+      expect(res.body.todo.completed).toBe(true);
+    });
+
+    it('reopens a todo with completed: false', async () => {
+      const create = await request(app)
+        .post('/api/todos')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Reopen me' });
+
+      await request(app)
+        .put(`/api/todos/${create.body.todo._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ status: 'completed' });
+
+      const res = await request(app)
+        .put(`/api/todos/${create.body.todo._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ completed: false });
+
+      expect(res.status).toBe(200);
+      expect(res.body.todo.status).toBe('inbox');
+      expect(res.body.todo.completedAt).toBeNull();
+      expect(res.body.todo.completed).toBe(false);
+    });
+
+    it('accepts status alias in_progress', async () => {
+      const create = await request(app)
+        .post('/api/todos')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Alias update' });
+
+      const res = await request(app)
+        .put(`/api/todos/${create.body.todo._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ status: 'in_progress' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.todo.status).toBe('in-progress');
+    });
+
+    it('rejects an invalid status on update', async () => {
+      const create = await request(app)
+        .post('/api/todos')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Bad update' });
+
+      const res = await request(app)
+        .put(`/api/todos/${create.body.todo._id}`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ status: 'bogus' });
+
+      expect(res.status).toBe(400);
     });
   });
 
@@ -302,6 +408,8 @@ describe('Todos API', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.message).toMatch(/trash/i);
+      expect(res.body.todo).toBeDefined();
+      expect(res.body.todo.deletedAt).toBeDefined();
     });
   });
 
@@ -353,6 +461,8 @@ describe('Todos API', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.status).toBe(200);
+      expect(res.body.todo).toBeDefined();
+      expect(res.body.todo.status).toBe('archived');
     });
   });
 
@@ -363,14 +473,30 @@ describe('Todos API', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ title: 'Snooze me' });
 
+      const until = new Date(Date.now() + 86400000).toISOString();
       const res = await request(app)
         .post(`/api/todos/${create.body.todo._id}/snooze`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ until: new Date(Date.now() + 86400000).toISOString() });
+        .send({ until });
 
-      // Server has a typo in controller (unil vs until) that may cause 500
-      // Once fixed, this should return 200 with { message, until }
-      expect([200, 500]).toContain(res.status);
+      expect(res.status).toBe(200);
+      expect(res.body.until).toBeDefined();
+      expect(res.body.todo).toBeDefined();
+      expect(res.body.todo.dueDate).toBeDefined();
+    });
+
+    it('rejects an invalid date', async () => {
+      const create = await request(app)
+        .post('/api/todos')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ title: 'Bad snooze' });
+
+      const res = await request(app)
+        .post(`/api/todos/${create.body.todo._id}/snooze`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ until: 'not-a-date' });
+
+      expect(res.status).toBe(400);
     });
   });
 
@@ -407,6 +533,31 @@ describe('Todos API', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.deleted).toBe(2);
+    });
+
+    it('bulk update normalizes status aliases', async () => {
+      const res = await request(app)
+        .post('/api/todos/bulk-update')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ids: ids.slice(0, 1), updates: { status: 'pending' } });
+
+      expect(res.status).toBe(200);
+
+      const list = await request(app)
+        .get('/api/todos')
+        .set('Authorization', `Bearer ${token}`);
+
+      const updated = list.body.todos.find(t => t._id === ids[0]);
+      expect(updated.status).toBe('inbox');
+    });
+
+    it('bulk update rejects invalid status', async () => {
+      const res = await request(app)
+        .post('/api/todos/bulk-update')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ ids: ids.slice(0, 1), updates: { status: 'bogus' } });
+
+      expect(res.status).toBe(400);
     });
   });
 
@@ -785,7 +936,63 @@ describe('Habits API', () => {
     expect(res.body.monthlyData.length).toBe(30);
   });
 
-  it('DELETE /api/habits/:id deletes a habit', async () => {
+  it('higher-streak for future log via completions endpoint', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Completion habit' });
+
+    const res = await request(app)
+      .post(`/api/habits/${create.body.habit._id}/completions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: new Date().toISOString() });
+
+    expect(res.status).toBe(200);
+    expect(res.body.habit.logs.length).toBe(1);
+  });
+
+  it('GET /api/habits/completions returns keyed completions', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Completions map' });
+
+    await request(app)
+      .post(`/api/habits/${create.body.habit._id}/completions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: new Date().toISOString() });
+
+    const res = await request(app)
+      .get('/api/habits/completions')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(typeof res.body.completions).toBe('object');
+    const keys = Object.keys(res.body.completions);
+    expect(keys.some(k => k.startsWith(create.body.habit._id.toString()))).toBe(true);
+  });
+
+  it('DELETE /api/habits/:id/completions/:date removes a completion', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Remove completion' });
+
+    await request(app)
+      .post(`/api/habits/${create.body.habit._id}/completions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: new Date().toISOString() });
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const res = await request(app)
+      .delete(`/api/habits/${create.body.habit._id}/completions/${dateStr}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.habit.logs.length).toBe(0);
+  });
+
+  it('DELETE /api/habits/:id/deletes a habit', async () => {
     const create = await request(app)
       .post('/api/habits')
       .set('Authorization', `Bearer ${token}`)

@@ -81,9 +81,10 @@ export default function Analytics() {
   }, [todos]);
 
   const priorityData = useMemo(() => {
+    const labels = { 1: 'urgent', 2: 'high', 3: 'medium', 4: 'low' };
     const counts = { urgent: 0, high: 0, medium: 0, low: 0 };
     todos.forEach((t) => {
-      if (t.priority) counts[t.priority] = (counts[t.priority] || 0) + 1;
+      if (t.priority && labels[t.priority]) counts[labels[t.priority]]++;
     });
     return Object.entries(counts)
       .filter(([, v]) => v > 0)

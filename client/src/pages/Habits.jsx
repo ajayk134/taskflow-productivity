@@ -23,8 +23,9 @@ import Modal from '../components/common/Modal';
 import EmptyState from '../components/common/EmptyState';
 
 const HABIT_ICONS = [Repeat, Zap, Heart, Dumbbell, BookOpen, Moon, Droplets, Smile];
+const HABIT_ICON_NAMES = ['repeat', 'zap', 'heart', 'dumbbell', 'book', 'moon', 'water', 'smile'];
 const HABIT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
-const FREQUENCIES = ['daily', 'weekly', 'monthday'];
+const FREQUENCIES = ['daily', 'weekly', 'custom'];
 
 export default function Habits() {
   const [habits, setHabits] = useState([]);
@@ -127,7 +128,7 @@ export default function Habits() {
     try {
       await api.post('/habits', {
         name: newName,
-        icon: HABIT_ICONS[newIcon].displayName || 'Habit',
+        icon: HABIT_ICON_NAMES[newIcon] || 'repeat',
         color: HABIT_COLORS[newColor],
         frequency: newFrequency,
       });
@@ -144,7 +145,7 @@ export default function Habits() {
 
   const archiveHabit = async (id) => {
     try {
-      await api.post(`/habits/${id}/archive`);
+      await api.put(`/habits/${id}`, { isArchived: true });
       toast.success('Habit archived');
       fetchHabits();
     } catch {
@@ -184,7 +185,8 @@ export default function Habits() {
           const streak = getStreak(habit._id);
           const longest = getLongestStreak(habit._id);
           const rate = getCompletionRate(habit._id);
-          const IconComp = HABIT_ICONS.find((ic) => ic.displayName === habit.icon) || Repeat;
+          const iconIdx = HABIT_ICON_NAMES.indexOf(habit.icon);
+          const IconComp = iconIdx >= 0 ? HABIT_ICONS[iconIdx] : Repeat;
 
           return (
             <div key={habit._id} className="card p-5 hover:shadow-md transition-shadow">

@@ -29,8 +29,8 @@ export default function BulkActions() {
   const [showProjectMenu, setShowProjectMenu] = useState(false);
   const [tagInput, setTagInput] = useState('');
 
-  const { bulkUpdate, bulkDelete, selectedTodos } = useTodoStore();
-  const { toggleSelectTodo, selectAllTodos, clearSelection } = useUIStore();
+  const { bulkUpdate, bulkDelete } = useTodoStore();
+  const { selectedTodos, toggleSelectTodo, selectAllTodos, clearSelection } = useUIStore();
   const { projects } = useProjectStore();
 
   const count = selectedTodos?.length || 0;
@@ -52,7 +52,10 @@ export default function BulkActions() {
   };
 
   const handleArchive = async () => {
-    await bulkUpdate(selectedTodos, { archivedAt: new Date().toISOString() });
+    await bulkUpdate(selectedTodos, {
+      status: 'archived',
+      archivedAt: new Date().toISOString(),
+    });
     toast.success(`${count} task${count > 1 ? 's' : ''} archived`);
     clearSelection();
   };

@@ -65,17 +65,14 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
 
   const priority = PRIORITY_CONFIG[todo.priority] || PRIORITY_CONFIG[4];
   const dueDateInfo = getDueDateInfo(todo.dueDate);
-  const completed = todo.status === 'completed';
+  const completed = todo.completed || todo.status === 'completed';
   const project = projects.find((p) => p.id === todo.projectId);
   const subtaskTotal = todo.subtasks?.length || 0;
   const subtaskDone = todo.subtasks?.filter((s) => s.completed).length || 0;
 
   const handleToggle = async (e) => {
     e.stopPropagation();
-    await updateTodo(todo.id, {
-      status: completed ? 'pending' : 'completed',
-      completedAt: completed ? null : new Date().toISOString(),
-    });
+    await updateTodo(todo.id, { completed: !completed });
   };
 
   const handleDelete = async (e) => {
@@ -160,7 +157,7 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
           >
             {todo.title}
           </span>
-          {todo.isInMyDay && !completed && (
+          {todo.isMyDay && !completed && (
             <Sun size={12} className="flex-shrink-0 text-amber-400" />
           )}
           {todo.isPinned && !completed && (

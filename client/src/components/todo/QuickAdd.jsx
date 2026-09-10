@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTodoStore } from '../../stores/todoStore';
 import { useUIStore } from '../../stores/uiStore';
+import api from '../../utils/api';
 import { Plus, Calendar, Flag, Tag, Clock, X, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -56,15 +57,8 @@ export default function QuickAdd({ projectId, onClose }) {
 
   const fetchParsedInfo = async (value) => {
     try {
-      const res = await fetch('/api/todos/parse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: value }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setParsed(data);
-      }
+      const data = await api.post('/todos/parse', { text: value });
+      setParsed(data?.parsed || null);
     } catch {
       setParsed(null);
     }

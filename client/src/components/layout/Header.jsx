@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Search,
   Plus,
@@ -38,6 +38,7 @@ export default function Header() {
   const { toggleSidebar, theme, setTheme, toggleCommandPalette } = useUIStore();
   const { user, logout } = useAuthStore();
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -112,7 +113,10 @@ export default function Header() {
             placeholder="Search..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setSearchFocused(true)}
+            onFocus={() => {
+              setSearchFocused(true);
+              window.dispatchEvent(new CustomEvent('taskflow:open-search'));
+            }}
             onBlur={() => setSearchFocused(false)}
             className="w-full pl-9 pr-12 py-2 text-sm bg-gray-100 dark:bg-gray-700/60 border-0 rounded-xl text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:bg-white dark:focus:bg-gray-700 transition-all"
           />
@@ -128,7 +132,10 @@ export default function Header() {
           <Search className="w-5 h-5" />
         </button>
 
-        <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm shadow-blue-500/25 transition-all duration-150 active:scale-[0.97]">
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('taskflow:open-quick-add'))}
+          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm shadow-blue-500/25 transition-all duration-150 active:scale-[0.97]"
+        >
           <Plus className="w-4 h-4" />
           <span className="hidden md:inline">Add Task</span>
         </button>
@@ -228,7 +235,13 @@ export default function Header() {
                 <User className="w-4 h-4" />
                 Profile
               </button>
-              <button className="flex items-center gap-3 w-full px-3.5 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate('/settings');
+                }}
+                className="flex items-center gap-3 w-full px-3.5 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
                 <Settings className="w-4 h-4" />
                 Settings
               </button>

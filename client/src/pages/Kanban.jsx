@@ -60,10 +60,10 @@ function KanbanCard({ todo, onOpen }) {
   };
 
   const priorityColors = {
-    urgent: 'border-l-red-500',
-    high: 'border-l-orange-500',
-    medium: 'border-l-yellow-500',
-    low: 'border-l-blue-500',
+    1: 'border-l-red-500',
+    2: 'border-l-orange-500',
+    3: 'border-l-yellow-500',
+    4: 'border-l-blue-500',
   };
 
   return (
@@ -113,8 +113,12 @@ function KanbanColumn({ column, todos, onAddTask, onOpenTask }) {
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
     try {
-      const data = { title: newTitle, list: column.id === 'completed' ? undefined : column.id };
-      if (column.id === 'completed') data.completed = true;
+      const data = { title: newTitle };
+      if (column.id === 'completed') {
+        data.completed = true;
+      } else {
+        data.status = column.id;
+      }
       await createTodo(data);
       toast.success('Task added');
       setNewTitle('');
@@ -191,7 +195,7 @@ export default function Kanban() {
 
   const filteredTodos = useMemo(() => {
     if (selectedProject === 'all') return todos;
-    return todos.filter((t) => t.project === selectedProject);
+    return todos.filter((t) => t.projectId === selectedProject);
   }, [todos, selectedProject]);
 
   const columnTodos = useMemo(() => {
@@ -231,7 +235,6 @@ export default function Kanban() {
     } else {
       updates.completed = false;
       updates.status = targetColumn;
-      updates.list = targetColumn;
     }
 
     try {

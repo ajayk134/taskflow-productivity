@@ -3,13 +3,14 @@ import { auth } from '../middleware/auth.js';
 import {
   createTodo, getTodos, getTodo, updateTodo, deleteTodo,
   permanentlyDeleteTodo, restoreTodo, duplicateTodo, archiveTodo,
-  snoozeTodo, bulkUpdateTodos, bulkDeleteTodos,
+  snoozeTodo, bulkUpdateTodos, bulkDeleteTodos, parseTodo,
   getMyDay, reorderMyDay, getTrash, emptyTrash
 } from '../controllers/todoController.js';
 
 const router = Router();
 router.use(auth);
 
+router.post('/parse', parseTodo);
 router.get('/my-day', getMyDay);
 router.post('/my-day/reorder', reorderMyDay);
 router.get('/trash', getTrash);

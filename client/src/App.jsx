@@ -4,8 +4,18 @@ import { Toaster } from 'react-hot-toast';
 import useAuthStore from './stores/authStore';
 import useUIStore from './stores/uiStore';
 import Layout from './components/layout/Layout';
+import SearchModal from './components/search/SearchModal';
+import CommandPalette from './components/common/CommandPalette';
+import FocusMode from './components/focus/FocusMode';
+import QuickAdd from './components/todo/QuickAdd';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Inbox from './pages/Inbox';
+import MyDay from './pages/MyDay';
+import Upcoming from './pages/Upcoming';
+import Important from './pages/Important';
+import Completed from './pages/Completed';
+import Trash from './pages/Trash';
 import Calendar from './pages/Calendar';
 import Kanban from './pages/Kanban';
 import Habits from './pages/Habits';
@@ -14,11 +24,16 @@ import Analytics from './pages/Analytics';
 import Notes from './pages/Notes';
 import Settings from './pages/Settings';
 import Projects from './pages/Projects';
+import ProjectDetail from './pages/ProjectDetail';
 
 function App() {
   const { isAuthenticated, isLoading, init } = useAuthStore();
   const { theme, setTheme } = useUIStore();
   const [initialized, setInitialized] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [focusOpen, setFocusOpen] = useState(false);
 
   useEffect(() => {
     init().finally(() => setInitialized(true));
@@ -45,6 +60,26 @@ function App() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, [theme]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const openSearch = () => setSearchOpen(true);
+    const openQuickAdd = () => setQuickAddOpen(true);
+    window.addEventListener('taskflow:open-search', openSearch);
+    window.addEventListener('taskflow:open-quick-add', openQuickAdd);
+    const onKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setCommandOpen(true);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('taskflow:open-search', openSearch);
+      window.removeEventListener('taskflow:open-quick-add', openQuickAdd);
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isAuthenticated]);
 
   if (!initialized) {
     return (
@@ -82,40 +117,55 @@ function App() {
         ) : (
           <Route element={<Layout />}>
             <Route path="/" element={<Navigate to="/inbox" replace />} />
-            <Route path="/inbox" element={<PlaceholderView title="Inbox" />} />
-            <Route path="/my-day" element={<PlaceholderView title="My Day" />} />
-            <Route path="/today" element={<PlaceholderView title="Today" />} />
-            <Route path="/upcoming" element={<PlaceholderView title="Upcoming" />} />
-            <Route path="/important" element={<PlaceholderView title="Important" />} />
-            <Route path="/completed" element={<PlaceholderView title="Completed" />} />
-            <Route path="/projects/:id" element={<PlaceholderView title="Project" />} />
+            <Route path="/inbox" element={<Inbox />} />
+            <Route path="/my-day" element={<MyDay />} />
+            <Route path="/today" element={<MyDay />} />
+            <Route path="/upcoming" element={<Upcoming />} />
+            <Route path="/important" element={<Important />} />
+            <Route path="/completed" element={<Completed />} />
+            <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/kanban" element={<Kanban />} />
             <Route path="/habits" element={<Habits />} />
             <Route path="/goals" element={<Goals />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/notes" element={<Notes />} />
-            <Route path="/trash" element={<PlaceholderView title="Trash" />} />
+            <Route path="/trash" element={<Trash />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="*" element={<Navigate to="/inbox" replace />} />
           </Route>
         )}
       </Routes>
-    </BrowserRouter>
-  );
-}
 
-function PlaceholderView({ title }) {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center">
-        <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">{title}</h2>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          This view is coming soon.
-        </p>
-      </div>
-    </div>
+      {isAuthenticated && (
+        <>
+          <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+          <CommandPalette
+            isOpen={commandOpen}
+            onClose={() => setCommandOpen(false)}
+            onCreateTodo={() => setQuickAddOpen(true)}
+            onSearch={() => setSearchOpen(true)}
+            onFocus={() => setFocusOpen(true)}
+          />
+          {quickAddOpen && (
+            <div
+              className="fixed inset-0 z-[70] flex items-start justify-center p-4 pt-[18vh]"
+              onClick={() => setQuickAddOpen(false)}
+            >
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+              <div
+                className="relative w-full max-w-2xl rounded-2xl border border-gray-200 dark:border-gray-700 bg-white p-4 shadow-2xl dark:bg-gray-800"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <QuickAdd onClose={() => setQuickAddOpen(false)} />
+              </div>
+            </div>
+          )}
+          {focusOpen && <FocusMode onClose={() => setFocusOpen(false)} />}
+        </>
+      )}
+    </BrowserRouter>
   );
 }
 

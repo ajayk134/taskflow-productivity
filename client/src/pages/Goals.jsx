@@ -55,7 +55,7 @@ export default function Goals() {
     if (!newName.trim()) return;
     try {
       await api.post('/goals', {
-        name: newName,
+        title: newName,
         description: newDescription,
         targetDate: newTargetDate || undefined,
         status: newStatus,
@@ -179,7 +179,7 @@ export default function Goals() {
                   <Target className="w-4.5 h-4.5 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{goal.name}</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{goal.title}</h3>
                   {goal.description && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{goal.description}</p>
                   )}
@@ -255,7 +255,7 @@ export default function Goals() {
       </Modal>
 
       {showDetail && (
-        <Modal isOpen={!!showDetail} onClose={() => setShowDetail(null)} title={showDetail.name} size="lg">
+        <Modal isOpen={!!showDetail} onClose={() => setShowDetail(null)} title={showDetail.title} size="lg">
           <div className="space-y-5">
             <div className="flex items-center gap-3">
               <div className="flex gap-2">

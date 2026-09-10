@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import TodoItem from './TodoItem';
 import { ListFilter, ArrowUpDown, Layers, ChevronDown } from 'lucide-react';
-import { isToday, isPast, parseISO, isThisWeek, isNextWeek } from 'date-fns';
+import { isToday, isPast, parseISO, isThisWeek, differenceInCalendarWeeks } from 'date-fns';
 import clsx from 'clsx';
 
 const SORT_OPTIONS = [
@@ -49,6 +49,8 @@ function sortTodos(todos, sortBy) {
 
 function groupTodos(todos, groupBy) {
   if (groupBy === 'none') return { 'All Tasks': todos };
+
+  const isNextWeek = (date) => differenceInCalendarWeeks(date, new Date()) === 1;
 
   const groups = {};
   todos.forEach((todo) => {

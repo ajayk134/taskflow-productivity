@@ -273,8 +273,8 @@ export default function ProjectDetail() {
 
 function KanbanView({ todos, onOpenDetail }) {
   const columns = {
-    pending: { label: 'To Do', color: 'border-gray-600' },
-    in_progress: { label: 'In Progress', color: 'border-blue-500' },
+    inbox: { label: 'To Do', color: 'border-gray-600' },
+    'in-progress': { label: 'In Progress', color: 'border-blue-500' },
     completed: { label: 'Done', color: 'border-emerald-500' },
   };
 
