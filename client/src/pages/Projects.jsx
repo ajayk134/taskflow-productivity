@@ -13,7 +13,7 @@ import {
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useProjectStore } from '../stores/projectStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Modal from '../components/common/Modal';
 import EmptyState from '../components/common/EmptyState';
 
@@ -24,6 +24,7 @@ const STATUS_FILTERS = ['all', 'active', 'completed', 'archived'];
 export default function Projects() {
   const { projects, fetchProjects, createProject, updateProject, deleteProject, archiveProject } = useProjectStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [showEdit, setShowEdit] = useState(null);
@@ -38,6 +39,14 @@ export default function Projects() {
   useEffect(() => {
     fetchProjects().finally(() => setLoading(false));
   }, [fetchProjects]);
+
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('new') === '1') {
+      setShowCreate(true);
+      window.history.replaceState({}, '', location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredProjects = projects.filter((p) => {
     if (filter === 'all') return true;

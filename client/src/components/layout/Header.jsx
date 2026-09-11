@@ -172,7 +172,7 @@ export default function Header() {
   };
 
   return (
-    <header className="flex items-center h-14 sm:h-16 px-3 sm:px-6 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm gap-1 sm:gap-2">
+    <header className="relative z-30 flex items-center h-14 sm:h-16 px-3 sm:px-6 border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm gap-1 sm:gap-2">
       <button
         onClick={toggleSidebar}
         aria-label="Open navigation menu"

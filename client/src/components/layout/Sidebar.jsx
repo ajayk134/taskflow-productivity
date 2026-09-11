@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   Inbox,
   SunMedium,
@@ -19,14 +19,18 @@ import {
   BarChart3,
   StickyNote,
   X,
+  Check,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 import useUIStore from '../../stores/uiStore';
 import useProjectStore from '../../stores/projectStore';
 import useAuthStore from '../../stores/authStore';
 import useTodoStore from '../../stores/todoStore';
 import api from '../../utils/api';
+
+const TAG_COLORS = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
 export default function Sidebar() {
   const { toggleSidebar, setCurrentView } = useUIStore();
@@ -34,9 +38,14 @@ export default function Sidebar() {
   const { user } = useAuthStore();
   const { todos, fetchTodos } = useTodoStore();
   const location = useLocation();
+  const navigate = useNavigate();
   const [projectsExpanded, setProjectsExpanded] = useState(true);
   const [tagsExpanded, setTagsExpanded] = useState(false);
   const [tags, setTags] = useState([]);
+  const [creatingTag, setCreatingTag] = useState(false);
+  const [tagName, setTagName] = useState('');
+  const [tagColor, setTagColor] = useState(TAG_COLORS[0]);
+  const [tagCreating, setTagCreating] = useState(false);
 
   useEffect(() => {
     api
@@ -84,6 +93,41 @@ export default function Sidebar() {
     label: tag.name,
     color: tag.color || 'bg-gray-500',
   }));
+
+  const handleCreateProject = () => {
+    if (window.innerWidth < 1024) toggleSidebar();
+    navigate('/projects?new=1');
+  };
+
+  const openTagCreate = () => {
+    setTagsExpanded(true);
+    setCreatingTag(true);
+    setTagName('');
+    setTagColor(TAG_COLORS[0]);
+  };
+
+  const handleCreateTag = async () => {
+    const name = tagName.trim();
+    if (!name) return;
+    if (tagCreating) return;
+    setTagCreating(true);
+    try {
+      const { tag } = await api.post('/tags', { name, color: tagColor });
+      setTags((prev) => {
+        const existing = prev.find((t) => t.name === tag.name);
+        return existing
+          ? prev.map((t) => (t.name === tag.name ? tag : t))
+          : [tag, ...prev];
+      });
+      toast.success(`Tag "${tag.name}" created`);
+      setCreatingTag(false);
+      setTagName('');
+    } catch {
+      toast.error('Failed to create tag');
+    } finally {
+      setTagCreating(false);
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
@@ -139,29 +183,29 @@ export default function Sidebar() {
         </section>
 
         <section>
-          <button
-            onClick={() => setProjectsExpanded(!projectsExpanded)}
-            className="flex items-center justify-between w-full px-3 mb-2 group"
-          >
-            <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-              Projects
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                className="p-0.5 rounded text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                }}
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
+          <div className="flex items-center justify-between px-3 mb-2">
+            <button
+              type="button"
+              onClick={() => setProjectsExpanded(!projectsExpanded)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              <span>Projects</span>
               {projectsExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                <ChevronDown className="w-3.5 h-3.5" />
               ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                <ChevronRight className="w-3.5 h-3.5" />
               )}
-            </div>
-          </button>
+            </button>
+            <button
+              type="button"
+              aria-label="Create project"
+              title="Create project"
+              onClick={handleCreateProject}
+              className="p-0.5 rounded text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
           {projectsExpanded && (
             <nav className="space-y-0.5">
               {projects.map((project) => (
@@ -202,29 +246,76 @@ export default function Sidebar() {
         </section>
 
         <section>
-          <button
-            onClick={() => setTagsExpanded(!tagsExpanded)}
-            className="flex items-center justify-between w-full px-3 mb-2 group"
-          >
-            <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-              Tags
-            </span>
-            <div className="flex items-center gap-1">
-              <button
-                className="p-0.5 rounded text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Plus className="w-3.5 h-3.5" />
-              </button>
+          <div className="flex items-center justify-between px-3 mb-2">
+            <button
+              type="button"
+              onClick={() => setTagsExpanded(!tagsExpanded)}
+              className="flex items-center gap-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              <span>Tags</span>
               {tagsExpanded ? (
-                <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                <ChevronDown className="w-3.5 h-3.5" />
               ) : (
-                <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                <ChevronRight className="w-3.5 h-3.5" />
               )}
+            </button>
+            <button
+              type="button"
+              aria-label="Create tag"
+              title="Create tag"
+              onClick={openTagCreate}
+              className="p-0.5 rounded text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          {creatingTag && (
+            <div className="px-3 mb-2">
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-700 rounded-lg px-2 py-1.5">
+                <Tag className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                <input
+                  autoFocus
+                  value={tagName}
+                  onChange={(e) => setTagName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleCreateTag();
+                    else if (e.key === 'Escape') setCreatingTag(false);
+                  }}
+                  placeholder="Tag name..."
+                  className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 dark:text-gray-300 placeholder-gray-400 outline-none"
+                />
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {TAG_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      aria-label={`Tag color ${c}`}
+                      onClick={() => setTagColor(c)}
+                      className={clsx(
+                        'w-3.5 h-3.5 rounded-full transition-transform hover:scale-110',
+                        tagColor === c && 'ring-2 ring-offset-1 ring-gray-400 dark:ring-offset-gray-800'
+                      )}
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Save tag"
+                  disabled={tagCreating}
+                  onClick={handleCreateTag}
+                  className="p-0.5 rounded text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </button>
+          )}
           {tagsExpanded && (
             <nav className="flex flex-wrap gap-2 px-3">
+              {sampleTags.length === 0 && (
+                <p className="text-xs text-gray-400 dark:text-gray-500">No tags yet</p>
+              )}
               {sampleTags.map((tag) => (
                 <span
                   key={tag.label}
