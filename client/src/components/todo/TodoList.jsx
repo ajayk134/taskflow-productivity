@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
 import TodoItem from './TodoItem';
-import { ListFilter, ArrowUpDown, Layers, ChevronDown } from 'lucide-react';
+import { ListFilter, ArrowUpDown, Layers, CheckSquare, Square, ChevronDown } from 'lucide-react';
 import { isToday, isPast, parseISO, isThisWeek, differenceInCalendarWeeks } from 'date-fns';
 import clsx from 'clsx';
+import { useUIStore } from '../../stores/uiStore';
 
 const SORT_OPTIONS = [
   { value: 'default', label: 'Default' },
@@ -137,6 +138,8 @@ export default function TodoList({
   const [activeGroup, setActiveGroup] = useState(groupBy);
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
+  const { selectedTodos, clearSelection } = useUIStore();
 
   const sortedTodos = useMemo(() => sortTodos(todos, sortBy), [todos, sortBy]);
   const groupedTodos = useMemo(
@@ -154,9 +157,27 @@ export default function TodoList({
       {/* Toolbar */}
       <div className="mb-3 flex items-center justify-between px-1">
         <span className="text-xs text-gray-500">
-          {todos.length} task{todos.length !== 1 ? 's' : ''}
+          {bulkMode ? `${selectedTodos.length} selected` : `${todos.length} task${todos.length !== 1 ? 's' : ''}`}
         </span>
         <div className="flex items-center gap-2">
+          {/* Bulk select */}
+          <button
+            onClick={() => {
+              const next = !bulkMode;
+              setBulkMode(next);
+              clearSelection();
+            }}
+            className={clsx(
+              'flex items-center gap-1 rounded-lg px-2 py-1 text-xs transition-colors',
+              bulkMode
+                ? 'bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400'
+                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700/40 dark:hover:text-gray-300'
+            )}
+            title="Select tasks"
+          >
+            {bulkMode ? <CheckSquare size={12} /> : <Square size={12} />}
+            {bulkMode ? 'Done' : 'Select'}
+          </button>
           {/* Sort */}
           <div className="relative">
             <button
@@ -261,7 +282,8 @@ export default function TodoList({
                 <TodoItem
                   key={todo.id}
                   todo={todo}
-                  isBulkMode={false}
+                  isBulkMode={bulkMode}
+                  isSelected={selectedTodos.includes(todo.id)}
                   onOpenDetail={onOpenDetail}
                 />
               ))}

@@ -59,9 +59,23 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const updates = req.body;
+    const updates = { ...req.body };
     delete updates.password;
-    delete updates.email;
+    delete updates.userId;
+
+    if ('email' in updates) {
+      const email = updates.email?.trim();
+      if (!email || !/\S+@\S+\.\S+/.test(email)) {
+        return res.status(400).json({ error: 'Invalid email address' });
+      }
+      const normalizedEmail = email.toLowerCase();
+      const existing = await User.findOne({ email: normalizedEmail, _id: { $ne: req.userId } });
+      if (existing) {
+        return res.status(409).json({ error: 'Email already registered' });
+      }
+      updates.email = normalizedEmail;
+    }
+
     const user = await User.findByIdAndUpdate(req.userId, updates, { new: true });
     res.json({ user });
   } catch (error) {

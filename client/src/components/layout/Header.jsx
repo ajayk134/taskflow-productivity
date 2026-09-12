@@ -214,7 +214,7 @@ export default function Header() {
         </div>
 
         <button
-          onClick={toggleCommandPalette}
+          onClick={() => window.dispatchEvent(new CustomEvent('taskflow:open-command'))}
           aria-label="Search"
           title="Search"
           className="flex items-center justify-center w-10 h-10 rounded-xl text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-700 transition-colors sm:hidden"
@@ -415,7 +415,13 @@ export default function Header() {
                   {user?.email || 'user@example.com'}
                 </p>
               </div>
-              <button className="flex items-center gap-3 w-full px-3.5 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  navigate('/settings');
+                }}
+                className="flex items-center gap-3 w-full px-3.5 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
                 <User className="w-4 h-4" />
                 Profile
               </button>

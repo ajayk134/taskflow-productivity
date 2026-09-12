@@ -49,6 +49,13 @@ export default function Goals() {
 
   useEffect(() => { fetchGoals(); }, [fetchGoals]);
 
+  useEffect(() => {
+    if (showDetail) {
+      const fresh = goals.find((g) => g._id === showDetail._id);
+      if (fresh) setShowDetail(fresh);
+    }
+  }, [goals]);
+
   const filteredGoals = goals.filter((g) => filter === 'all' || g.status === filter);
 
   const handleCreate = async () => {

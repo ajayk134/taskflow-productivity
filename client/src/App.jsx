@@ -65,8 +65,10 @@ function App() {
     if (!isAuthenticated) return;
     const openSearch = () => setSearchOpen(true);
     const openQuickAdd = () => setQuickAddOpen(true);
+    const openCommand = () => setCommandOpen(true);
     window.addEventListener('taskflow:open-search', openSearch);
     window.addEventListener('taskflow:open-quick-add', openQuickAdd);
+    window.addEventListener('taskflow:open-command', openCommand);
     const onKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
@@ -77,6 +79,7 @@ function App() {
     return () => {
       window.removeEventListener('taskflow:open-search', openSearch);
       window.removeEventListener('taskflow:open-quick-add', openQuickAdd);
+      window.removeEventListener('taskflow:open-command', openCommand);
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [isAuthenticated]);

@@ -55,8 +55,8 @@ export default function Notes() {
       );
     }
     return filtered.sort((a, b) => {
-      if (a.pinned && !b.pinned) return -1;
-      if (!a.pinned && b.pinned) return 1;
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
       return new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt);
     });
   }, [notes, searchQuery]);
@@ -95,7 +95,7 @@ export default function Notes() {
 
   const togglePin = async (note) => {
     try {
-      await api.put(`/notes/${note._id}`, { pinned: !note.pinned });
+      await api.put(`/notes/${note._id}`, { isPinned: !note.isPinned });
       fetchNotes();
     } catch {
       toast.error('Failed to pin note');
@@ -174,7 +174,7 @@ export default function Notes() {
                 <div className="flex gap-1 transition-opacity md:opacity-0 md:group-hover:opacity-100">
                   <button
                     onClick={(e) => { e.stopPropagation(); togglePin(note); }}
-                    className={clsx('p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700', note.pinned ? 'text-amber-500' : 'text-gray-400')}
+                    className={clsx('p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700', note.isPinned ? 'text-amber-500' : 'text-gray-400')}
                   >
                     <Pin className="w-3.5 h-3.5" />
                   </button>
@@ -206,7 +206,7 @@ export default function Notes() {
             >
               <button
                 onClick={(e) => { e.stopPropagation(); togglePin(note); }}
-                className={clsx('flex-shrink-0', note.pinned ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600')}
+                className={clsx('flex-shrink-0', note.isPinned ? 'text-amber-500' : 'text-gray-300 dark:text-gray-600')}
               >
                 <Pin className="w-4 h-4" />
               </button>

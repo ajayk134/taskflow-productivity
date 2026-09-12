@@ -29,6 +29,9 @@ const priorityColors = {
   low: 'text-blue-600 bg-blue-50 dark:bg-blue-500/10',
 };
 
+const PRIORITY_NAMES = { 1: 'urgent', 2: 'high', 3: 'medium', 4: 'low' };
+const PRIORITY_VALUES = { urgent: 1, high: 2, medium: 3, low: 4 };
+
 function parseSearchQuery(query) {
   const filters = { text: '', priority: null, status: null, due: null, tag: null };
   const parts = query.split(/\s+/);
@@ -56,12 +59,13 @@ function matchesFilters(todo, filters) {
     if (!text.includes(filters.text)) return false;
   }
   if (filters.priority) {
-    if ((todo.priority || '').toLowerCase() !== filters.priority) return false;
+    const priorityNumber = PRIORITY_VALUES[filters.priority];
+    if (priorityNumber === undefined || todo.priority !== priorityNumber) return false;
   }
   if (filters.status) {
     if (filters.status === 'completed' && !todo.completed) return false;
     if (filters.status === 'active' && todo.completed) return false;
-    if (filters.status === 'pending' && todo.status !== 'pending') return false;
+    if (filters.status === 'pending' && !['inbox', 'planned', 'next'].includes(todo.status)) return false;
   }
   if (filters.due && todo.dueDate) {
     const due = parseISO(todo.dueDate);
@@ -213,8 +217,8 @@ export default function SearchModal({ isOpen, onClose }) {
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
                   {todo.priority && (
-                    <span className={clsx('text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded', priorityColors[todo.priority])}>
-                      {todo.priority}
+                    <span className={clsx('text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded', priorityColors[PRIORITY_NAMES[todo.priority]] || 'text-gray-400 bg-gray-50 dark:bg-gray-700')}>
+                      {PRIORITY_NAMES[todo.priority] || `P${todo.priority}`}
                     </span>
                   )}
                   {todo.dueDate && (

@@ -234,9 +234,10 @@ export default function TodoDetail({ todo, onClose }) {
     setLocal((prev) => ({ ...prev, [field]: value }));
   };
 
-  const save = async (field) => {
+  const save = async (field, value) => {
+    const next = value === undefined ? local[field] : value;
     try {
-      await updateTodo(todo.id, { [field]: local[field] });
+      await updateTodo(todo.id, { [field]: next });
     } catch {
       toast.error('Failed to update');
     }
@@ -275,15 +276,13 @@ export default function TodoDetail({ todo, onClose }) {
     const tags = [...(local.tags || []), tagInput.trim()];
     update('tags', tags);
     setTagInput('');
-    save('tags');
+    save('tags', tags);
   };
 
   const removeTag = (tag) => {
-    update(
-      'tags',
-      local.tags.filter((t) => t !== tag)
-    );
-    setTimeout(() => save('tags'), 0);
+    const tags = (local.tags || []).filter((t) => t !== tag);
+    update('tags', tags);
+    save('tags', tags);
   };
 
   const toggleCheckItem = (id) => {
@@ -291,15 +290,13 @@ export default function TodoDetail({ todo, onClose }) {
       item.id === id ? { ...item, checked: !item.checked } : item
     );
     update('checklist', items);
-    setTimeout(() => save('checklist'), 0);
+    save('checklist', items);
   };
 
   const removeCheckItem = (id) => {
-    update(
-      'checklist',
-      (local.checklist || []).filter((item) => item.id !== id)
-    );
-    setTimeout(() => save('checklist'), 0);
+    const items = (local.checklist || []).filter((item) => item.id !== id);
+    update('checklist', items);
+    save('checklist', items);
   };
 
   const addCheckItem = () => {
@@ -318,13 +315,13 @@ export default function TodoDetail({ todo, onClose }) {
     const links = [...(local.links || []), newLink.trim()];
     update('links', links);
     setNewLink('');
-    save('links');
+    save('links', links);
   };
 
   const removeLink = (idx) => {
     const links = (local.links || []).filter((_, i) => i !== idx);
     update('links', links);
-    save('links');
+    save('links', links);
   };
 
   if (!todo) return null;
@@ -363,7 +360,7 @@ export default function TodoDetail({ todo, onClose }) {
               value={local.title}
               onSave={(val) => {
                 update('title', val);
-                save('title');
+                save('title', val);
               }}
             />
 
@@ -371,8 +368,9 @@ export default function TodoDetail({ todo, onClose }) {
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => {
-                  update('isMyDay', !local.isMyDay);
-                  save('isMyDay');
+                  const v = !local.isMyDay;
+                  update('isMyDay', v);
+                  save('isMyDay', v);
                 }}
                 className={clsx(
                   'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all',
@@ -385,8 +383,9 @@ export default function TodoDetail({ todo, onClose }) {
               </button>
               <button
                 onClick={() => {
-                  update('isImportant', !local.isImportant);
-                  save('isImportant');
+                  const v = !local.isImportant;
+                  update('isImportant', v);
+                  save('isImportant', v);
                 }}
                 className={clsx(
                   'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all',
@@ -399,8 +398,9 @@ export default function TodoDetail({ todo, onClose }) {
               </button>
               <button
                 onClick={() => {
-                  update('isPinned', !local.isPinned);
-                  save('isPinned');
+                  const v = !local.isPinned;
+                  update('isPinned', v);
+                  save('isPinned', v);
                 }}
                 className={clsx(
                   'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all',
@@ -424,7 +424,7 @@ export default function TodoDetail({ todo, onClose }) {
                     key={p.value}
                     onClick={() => {
                       update('priority', p.value);
-                      save('priority');
+                      save('priority', p.value);
                     }}
                     className={clsx(
                       'rounded-lg border px-3 py-1.5 text-xs font-bold transition-all',
@@ -445,8 +445,9 @@ export default function TodoDetail({ todo, onClose }) {
               <select
                 value={local.status || 'inbox'}
                 onChange={(e) => {
-                  update('status', e.target.value);
-                  save('status');
+                  const v = e.target.value;
+                  update('status', v);
+                  save('status', v);
                 }}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/20 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               >
@@ -468,8 +469,9 @@ export default function TodoDetail({ todo, onClose }) {
                   type="date"
                   value={local.dueDate ? new Date(local.dueDate).toISOString().split('T')[0] : ''}
                   onChange={(e) => {
-                    update('dueDate', e.target.value || null);
-                    save('dueDate');
+                    const v = e.target.value || null;
+                    update('dueDate', v);
+                    save('dueDate', v);
                   }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500/50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
                 />
@@ -482,8 +484,9 @@ export default function TodoDetail({ todo, onClose }) {
                   type="time"
                   value={local.dueTime || ''}
                   onChange={(e) => {
-                    update('dueTime', e.target.value || null);
-                    save('dueTime');
+                    const v = e.target.value || null;
+                    update('dueTime', v);
+                    save('dueTime', v);
                   }}
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500/50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
                 />
@@ -531,8 +534,9 @@ export default function TodoDetail({ todo, onClose }) {
               <select
                 value={local.projectId || ''}
                 onChange={(e) => {
-                  update('projectId', e.target.value || null);
-                  save('projectId');
+                  const v = e.target.value || null;
+                  update('projectId', v);
+                  save('projectId', v);
                 }}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500/50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               >
@@ -620,8 +624,9 @@ export default function TodoDetail({ todo, onClose }) {
               <select
                 value={local.recurrence?.type || ''}
                 onChange={(e) => {
-                  update('recurrence', e.target.value ? { type: e.target.value, interval: 1 } : null);
-                  save('recurrence');
+                  const v = e.target.value ? { type: e.target.value, interval: 1 } : null;
+                  update('recurrence', v);
+                  save('recurrence', v);
                 }}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500/50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               >
@@ -643,8 +648,9 @@ export default function TodoDetail({ todo, onClose }) {
                 type="datetime-local"
                 value={local.reminder ? new Date(local.reminder).toISOString().slice(0, 16) : ''}
                 onChange={(e) => {
-                  update('reminder', e.target.value || null);
-                  save('reminder');
+                  const v = e.target.value || null;
+                  update('reminder', v);
+                  save('reminder', v);
                 }}
                 className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500/50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
               />
@@ -675,7 +681,7 @@ export default function TodoDetail({ todo, onClose }) {
                   subtasks={local.subtasks || []}
                   onChange={(val) => {
                     update('subtasks', val);
-                    save('subtasks');
+                    save('subtasks', val);
                   }}
                 />
               </div>

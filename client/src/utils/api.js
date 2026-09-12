@@ -28,8 +28,18 @@ class ApiClient {
 
     if (response.status === 401) {
       this.setToken(null);
-      window.location.href = '/login';
-      throw new Error('Unauthorized');
+      let message = 'Session expired. Please sign in.';
+      try {
+        const errData = await response.json();
+        if (errData?.error) message = errData.error;
+      } catch {
+        /* keep default message */
+      }
+      const pathname = typeof window !== 'undefined' && window.location ? window.location.pathname || '' : '';
+      if (!pathname.startsWith('/login') && !pathname.startsWith('/register')) {
+        if (typeof window !== 'undefined' && window.location) window.location.href = '/login';
+      }
+      throw new Error(message);
     }
 
     const contentType = response.headers.get('content-type');
