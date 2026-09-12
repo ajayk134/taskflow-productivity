@@ -30,6 +30,11 @@ export default function Notes() {
   const [noteProject, setNoteProject] = useState('');
   const { projects, fetchProjects } = useProjectStore();
 
+  const projectNameFor = (id) => {
+    const p = projects.find((proj) => String(proj._id) === String(id) || String(proj.id) === String(id));
+    return p?.name || '';
+  };
+
   const fetchNotes = useCallback(async () => {
     setLoading(true);
     try {
@@ -66,7 +71,7 @@ export default function Notes() {
       setEditingNote(note);
       setNoteTitle(note.title || '');
       setNoteContent(note.content || '');
-      setNoteProject(note.project || '');
+      setNoteProject(note.projectId || '');
     } else {
       setEditingNote(null);
       setNoteTitle('');
@@ -78,7 +83,7 @@ export default function Notes() {
 
   const handleSave = async () => {
     try {
-      const data = { title: noteTitle, content: noteContent, project: noteProject || undefined };
+      const data = { title: noteTitle, content: noteContent, projectId: noteProject || null };
       if (editingNote) {
         await api.put(`/notes/${editingNote._id}`, data);
         toast.success('Note updated');
@@ -189,8 +194,10 @@ export default function Notes() {
               <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 mb-3">{note.content || 'Empty note'}</p>
               <div className="flex items-center justify-between text-[11px] text-gray-400">
                 <span>{format(parseISO(note.updatedAt || note.createdAt), 'MMM d, yyyy')}</span>
-                {note.project && (
-                  <span className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500">Project</span>
+                {note.projectId && projectNameFor(note.projectId) && (
+                  <span className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-500">
+                    {projectNameFor(note.projectId)}
+                  </span>
                 )}
               </div>
             </div>

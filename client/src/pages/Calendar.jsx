@@ -31,10 +31,10 @@ const VIEWS = ['month', 'week', 'day', 'agenda'];
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const priorityDot = {
-  urgent: 'bg-red-500',
-  high: 'bg-orange-500',
-  medium: 'bg-yellow-500',
-  low: 'bg-blue-500',
+  1: 'bg-red-500',
+  2: 'bg-orange-500',
+  3: 'bg-yellow-500',
+  4: 'bg-blue-500',
 };
 
 export default function Calendar() {
@@ -45,7 +45,7 @@ export default function Calendar() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createDate, setCreateDate] = useState(null);
   const [newTitle, setNewTitle] = useState('');
-  const [newPriority, setNewPriority] = useState('medium');
+  const [newPriority, setNewPriority] = useState(3);
 
   useEffect(() => { fetchTodos(); }, [fetchTodos]);
 
@@ -78,7 +78,7 @@ export default function Calendar() {
   const openCreate = (date) => {
     setCreateDate(date);
     setNewTitle('');
-    setNewPriority('medium');
+    setNewPriority(3);
     setShowCreateModal(true);
   };
 
@@ -343,13 +343,18 @@ export default function Calendar() {
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
             <div className="flex gap-2">
-              {['low', 'medium', 'high', 'urgent'].map((p) => (
+              {[
+                { value: 1, label: 'urgent' },
+                { value: 2, label: 'high' },
+                { value: 3, label: 'medium' },
+                { value: 4, label: 'low' },
+              ].map((p) => (
                 <button
-                  key={p}
-                  onClick={() => setNewPriority(p)}
-                  className={clsx('px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors', newPriority === p ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600')}
+                  key={p.value}
+                  onClick={() => setNewPriority(p.value)}
+                  className={clsx('px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors', newPriority === p.value ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600')}
                 >
-                  {p}
+                  {p.label}
                 </button>
               ))}
             </div>

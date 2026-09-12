@@ -28,6 +28,7 @@ import {
 import clsx from 'clsx';
 import { useTodoStore } from '../stores/todoStore';
 import { useProjectStore } from '../stores/projectStore';
+import TodoDetail from '../components/todo/TodoDetail';
 import toast from 'react-hot-toast';
 
 const COLUMNS = [
@@ -72,7 +73,7 @@ function KanbanCard({ todo, onOpen }) {
       ref={setNodeRef}
       style={style}
       className={clsx(
-        'bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 border-l-3 p-3 cursor-pointer hover:shadow-md transition-shadow group',
+        'bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 border-l-[3px] p-3 cursor-pointer hover:shadow-md transition-shadow group',
         isDragging && 'opacity-50 shadow-lg',
         priorityColors[todo.priority] || 'border-l-gray-300'
       )}
@@ -194,6 +195,7 @@ export default function Kanban() {
   const { projects, fetchProjects } = useProjectStore();
   const [selectedProject, setSelectedProject] = useState('all');
   const [activeId, setActiveId] = useState(null);
+  const [selectedTodo, setSelectedTodo] = useState(null);
 
   useEffect(() => {
     fetchTodos();
@@ -294,6 +296,7 @@ export default function Kanban() {
               key={column.id}
               column={column}
               todos={columnTodos[column.id]}
+              onOpenTask={setSelectedTodo}
             />
           ))}
         </div>
@@ -305,6 +308,10 @@ export default function Kanban() {
           )}
         </DragOverlay>
       </DndContext>
+
+      {selectedTodo && (
+        <TodoDetail todo={selectedTodo} onClose={() => setSelectedTodo(null)} />
+      )}
     </div>
   );
 }

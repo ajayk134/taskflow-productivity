@@ -11,7 +11,6 @@ const sizeClasses = {
 };
 
 export default function Modal({ isOpen, onClose, title, children, actions, size = 'md', className }) {
-  const overlayRef = useRef(null);
   const contentRef = useRef(null);
 
   const handleKeyDown = useCallback((e) => {
@@ -33,10 +32,9 @@ export default function Modal({ isOpen, onClose, title, children, actions, size 
 
   return (
     <div
-      ref={overlayRef}
       className="fixed inset-0 z-[60] flex items-center justify-center p-4"
       onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
+        if (contentRef.current && !contentRef.current.contains(e.target)) onClose();
       }}
     >
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" />

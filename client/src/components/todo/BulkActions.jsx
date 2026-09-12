@@ -93,12 +93,23 @@ export default function BulkActions() {
     clearSelection();
   };
 
+  const handleSelectAll = () => {
+    const all = useTodoStore.getState().todos;
+    const activeIds = all
+      .filter((t) => t.status !== 'completed' && t.status !== 'archived' && !t.deletedAt)
+      .map((t) => t._id);
+    const allSelected = selectedTodos.length === activeIds.length &&
+      activeIds.length > 0 &&
+      activeIds.every((id) => selectedTodos.includes(id));
+    selectAllTodos(allSelected ? [] : activeIds);
+  };
+
   return (
     <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 animate-slide-up">
       <div className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white/95 px-5 py-3 shadow-2xl backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-800/95">
         {/* Select all / Clear */}
         <button
-          onClick={() => selectAllTodos([])}
+          onClick={handleSelectAll}
           className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-300"
           title="Select all"
         >
