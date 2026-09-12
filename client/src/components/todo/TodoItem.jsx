@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTodoStore } from '../../stores/todoStore';
 import { useUIStore } from '../../stores/uiStore';
 import { useProjectStore } from '../../stores/projectStore';
+import { useTagStore } from '../../stores/tagStore';
 import {
   Check,
   Calendar,
@@ -60,6 +61,7 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
   const { updateTodo, deleteTodo, archiveTodo, duplicateTodo } = useTodoStore();
   const { toggleSelectTodo } = useUIStore();
   const { projects } = useProjectStore();
+  const styleFor = useTagStore((s) => s.styleFor);
 
   const priority = PRIORITY_CONFIG[todo.priority] || PRIORITY_CONFIG[4];
   const dueDateInfo = getDueDateInfo(todo.dueDate);
@@ -195,7 +197,8 @@ export default function TodoItem({ todo, isSelected, isBulkMode, onOpenDetail })
           {todo.tags?.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-400"
+              className="rounded-md px-1.5 py-0.5 text-[10px] font-medium"
+              style={styleFor(tag)}
             >
               {tag}
             </span>

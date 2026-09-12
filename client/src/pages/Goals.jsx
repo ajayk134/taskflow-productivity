@@ -166,7 +166,7 @@ export default function Goals() {
         />
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {filteredGoals.map((goal) => {
           const progress = getProgress(goal);
           const cfg = STATUS_CONFIG[goal.status] || STATUS_CONFIG.active;

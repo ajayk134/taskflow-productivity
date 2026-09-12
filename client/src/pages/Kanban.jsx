@@ -27,6 +27,7 @@ import {
 import clsx from 'clsx';
 import { useTodoStore } from '../stores/todoStore';
 import { useProjectStore } from '../stores/projectStore';
+import { useTagStore } from '../stores/tagStore';
 import TodoDetail from '../components/todo/TodoDetail';
 import toast from 'react-hot-toast';
 
@@ -54,6 +55,7 @@ function KanbanCard({ todo, onOpen }) {
     transition,
     isDragging,
   } = useSortable({ id: todo._id, data: { todo } });
+  const styleFor = useTagStore((s) => s.styleFor);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -93,7 +95,11 @@ function KanbanCard({ todo, onOpen }) {
           {(todo.tags || []).length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {todo.tags.slice(0, 3).map((tag) => (
-                <span key={typeof tag === 'string' ? tag : tag._id} className="px-1.5 py-0.5 text-[10px] font-medium rounded bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+                <span
+                  key={typeof tag === 'string' ? tag : tag._id}
+                  className="px-1.5 py-0.5 text-[10px] font-medium rounded"
+                  style={styleFor(typeof tag === 'string' ? tag : tag.name)}
+                >
                   {typeof tag === 'string' ? tag : tag.name}
                 </span>
               ))}
@@ -134,7 +140,7 @@ function KanbanColumn({ column, todos, _onAddTask, onOpenTask }) {
   };
 
   return (
-    <div className="flex flex-col w-full md:w-[300px] lg:w-[300px] md:min-w-[300px] md:flex-shrink-0">
+    <div className="flex flex-col w-[300px] min-w-[300px] max-w-[300px] flex-shrink-0 max-h-[calc(100vh-13rem)]">
       <div className="flex items-center gap-2 px-3 py-2 mb-2 md:mb-3">
         <div className={clsx('w-2 h-2 rounded-full', column.color)} />
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{column.label}</h3>
@@ -146,7 +152,7 @@ function KanbanColumn({ column, todos, _onAddTask, onOpenTask }) {
       <div
         ref={setNodeRef}
         className={clsx(
-          'flex-1 space-y-2 min-h-[120px] md:min-h-[200px] p-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30',
+          'flex-1 space-y-2 min-h-[120px] md:min-h-[200px] p-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 overflow-y-auto',
           isOver && 'ring-2 ring-blue-400/60 bg-blue-50/60 dark:bg-blue-500/5'
         )}
       >
@@ -288,7 +294,7 @@ export default function Kanban() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col md:flex-row gap-5 md:gap-4 md:overflow-x-auto md:pb-4 md:-mx-2 md:px-2">
+        <div className="flex flex-row gap-4 md:gap-5 overflow-x-auto overflow-y-hidden pb-4 -mx-2 px-2 items-stretch">
           {COLUMNS.map((column) => (
             <KanbanColumn
               key={column.id}

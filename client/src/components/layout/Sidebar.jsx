@@ -27,7 +27,7 @@ import toast from 'react-hot-toast';
 import useUIStore from '../../stores/uiStore';
 import useProjectStore from '../../stores/projectStore';
 import useTodoStore from '../../stores/todoStore';
-import api from '../../utils/api';
+import useTagStore from '../../stores/tagStore';
 
 const TAG_COLORS = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -35,22 +35,19 @@ export default function Sidebar() {
   const { toggleSidebar, setCurrentView } = useUIStore();
   const { projects, fetchProjects } = useProjectStore();
   const { todos, fetchTodos } = useTodoStore();
+  const { tags, fetchTags, createTag } = useTagStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [projectsExpanded, setProjectsExpanded] = useState(true);
   const [tagsExpanded, setTagsExpanded] = useState(false);
-  const [tags, setTags] = useState([]);
   const [creatingTag, setCreatingTag] = useState(false);
   const [tagName, setTagName] = useState('');
   const [tagColor, setTagColor] = useState(TAG_COLORS[0]);
   const [tagCreating, setTagCreating] = useState(false);
 
   useEffect(() => {
-    api
-      .get('/tags')
-      .then((data) => setTags(data.tags || []))
-      .catch(() => {});
-  }, []);
+    fetchTags();
+  }, [fetchTags]);
 
   useEffect(() => {
     fetchProjects();
@@ -89,7 +86,7 @@ export default function Sidebar() {
 
   const sampleTags = tags.map((tag) => ({
     label: tag.name,
-    color: tag.color || 'bg-gray-500',
+    color: tag.color || '#6366f1',
   }));
 
   const handleCreateProject = () => {
@@ -110,13 +107,7 @@ export default function Sidebar() {
     if (tagCreating) return;
     setTagCreating(true);
     try {
-      const { tag } = await api.post('/tags', { name, color: tagColor });
-      setTags((prev) => {
-        const existing = prev.find((t) => t.name === tag.name);
-        return existing
-          ? prev.map((t) => (t.name === tag.name ? tag : t))
-          : [tag, ...prev];
-      });
+      const tag = await createTag({ name, color: tagColor });
       toast.success(`Tag "${tag.name}" created`);
       setCreatingTag(false);
       setTagName('');
@@ -317,7 +308,8 @@ export default function Sidebar() {
               {sampleTags.map((tag) => (
                 <span
                   key={tag.label}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium cursor-pointer transition-colors"
+                  style={{ backgroundColor: `${tag.color}1F`, color: tag.color }}
                 >
                   <Tag className="w-3 h-3" />
                   {tag.label}

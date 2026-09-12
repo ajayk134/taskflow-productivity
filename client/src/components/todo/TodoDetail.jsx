@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTodoStore } from '../../stores/todoStore';
 import { useProjectStore } from '../../stores/projectStore';
+import { useTagStore } from '../../stores/tagStore';
 import {
   X,
   Pencil,
@@ -222,6 +223,7 @@ export default function TodoDetail({ todo, onClose }) {
 
   const { updateTodo, deleteTodo, archiveTodo, duplicateTodo, restoreTodo } = useTodoStore();
   const { projects } = useProjectStore();
+  const styleFor = useTagStore((s) => s.styleFor);
 
   useEffect(() => {
     setLocal({ ...todo });
@@ -499,12 +501,13 @@ export default function TodoDetail({ todo, onClose }) {
                 {(local.tags || []).map((tag) => (
                   <span
                     key={tag}
-                    className="group/tag flex items-center gap-1 rounded-md bg-emerald-500/15 px-2 py-1 text-xs text-emerald-600 dark:text-emerald-400"
+                    className="group/tag flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium"
+                    style={styleFor(tag)}
                   >
                     {tag}
                     <button
                       onClick={() => removeTag(tag)}
-                      className="inline md:hidden md:group-hover/tag:inline"
+                      className="inline md:hidden md:group-hover/tag:inline text-inherit"
                     >
                       <X size={10} />
                     </button>

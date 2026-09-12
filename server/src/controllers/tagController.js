@@ -8,7 +8,10 @@ export const createTag = async (req, res) => {
 
     const tag = await Tag.findOneAndUpdate(
       { userId: req.userId, name: name.toLowerCase().trim() },
-      { $setOnInsert: { userId: req.userId, name: name.toLowerCase().trim(), color: color || '#6366f1' } },
+      {
+        $set: { color: color || '#6366f1' },
+        $setOnInsert: { userId: req.userId, name: name.toLowerCase().trim() }
+      },
       { upsert: true, new: true }
     );
     res.status(201).json({ tag });
