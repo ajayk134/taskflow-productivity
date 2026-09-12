@@ -3,14 +3,8 @@ import {
   Sun,
   Moon,
   Monitor,
-  Palette,
-  Clock,
-  Globe,
-  Bell,
   Download,
   Upload,
-  User,
-  Shield,
   ChevronRight,
   Check,
 } from 'lucide-react';
@@ -19,6 +13,7 @@ import toast from 'react-hot-toast';
 import { useUIStore } from '../stores/uiStore';
 import { useAuthStore } from '../stores/authStore';
 import { api } from '../utils/api';
+import { applyAccent } from '../utils/theme';
 
 const ACCENT_COLORS = ['#3b82f6', '#8b5cf6', '#ec4899', '#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#6366f1'];
 const THEMES = [
@@ -71,7 +66,7 @@ export default function Settings() {
   const updateAccentColor = (color) => {
     setAccentColor(color);
     localStorage.setItem('taskflow_accent', color);
-    document.documentElement.style.setProperty('--color-brand-500', color);
+    applyAccent(color);
     toast.success('Accent color updated');
   };
 

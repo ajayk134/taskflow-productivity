@@ -6,7 +6,6 @@ import {
   Filter,
   Tag,
   Calendar,
-  AlertCircle,
   CheckCircle2,
   Circle,
   ArrowRight,

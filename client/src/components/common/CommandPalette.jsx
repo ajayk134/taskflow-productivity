@@ -6,7 +6,6 @@ import {
   Inbox,
   CalendarDays,
   Zap,
-  Target,
   FolderKanban,
   Sun,
   Download,
@@ -22,7 +21,7 @@ const commands = [
   { id: 'search', label: 'Search', icon: Search, action: 'search', keywords: ['find', 'lookup'] },
   { id: 'go-inbox', label: 'Go to Inbox', icon: Inbox, path: '/inbox', keywords: ['inbox'] },
   { id: 'go-today', label: 'Go to Today', icon: CalendarDays, path: '/today', keywords: ['today', 'day'] },
-  { id: 'go-projects', label: 'Go to Projects', icon: FolderKanban, path: '/kanban', keywords: ['projects', 'kanban', 'board'] },
+  { id: 'go-projects', label: 'Go to Projects', icon: FolderKanban, path: '/projects', keywords: ['projects', 'kanban', 'board'] },
   { id: 'open-calendar', label: 'Open Calendar', icon: CalendarDays, path: '/calendar', keywords: ['calendar', 'schedule', 'date'] },
   { id: 'start-focus', label: 'Start Focus Session', icon: Zap, action: 'startFocus', keywords: ['focus', 'pomodoro', 'timer', 'concentrate'] },
   { id: 'toggle-theme', label: 'Toggle Theme', icon: Sun, action: 'toggleTheme', keywords: ['dark', 'light', 'mode'] },
@@ -77,7 +76,9 @@ export default function CommandPalette({ isOpen, onClose, onCreateTodo, onSearch
   }, [navigate, onCreateTodo, onSearch, onFocus, setTheme, theme, onClose]);
 
   const handleKeyDown = (e) => {
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'Escape') {
+      onClose();
+    } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1));
     } else if (e.key === 'ArrowUp') {

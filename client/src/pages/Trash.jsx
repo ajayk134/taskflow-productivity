@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTodoStore } from '../stores/todoStore';
 import TodoDetail from '../components/todo/TodoDetail';
 import { Trash2, RotateCcw, X, AlertTriangle } from 'lucide-react';
-import { formatDistanceToNow, parseISO } from 'date-fns';
-import clsx from 'clsx';
+import { formatDistanceToNow } from 'date-fns';
 import toast from 'react-hot-toast';
 
 function TrashItem({ todo, onRestore, onDelete, onOpen }) {

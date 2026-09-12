@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import TodoItem from './TodoItem';
-import { ListFilter, ArrowUpDown, Layers, CheckSquare, Square, ChevronDown } from 'lucide-react';
+import { ListFilter, ArrowUpDown, Layers, CheckSquare, Square } from 'lucide-react';
 import { isToday, isPast, parseISO, isThisWeek, differenceInCalendarWeeks } from 'date-fns';
 import clsx from 'clsx';
 import { useUIStore } from '../../stores/uiStore';

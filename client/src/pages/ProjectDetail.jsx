@@ -160,6 +160,7 @@ export default function ProjectDetail() {
           {/* More menu */}
           <div className="relative">
             <button
+              aria-label="Project actions"
               onClick={() => setShowMenu(!showMenu)}
               className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700/50 dark:hover:text-gray-300"
             >
@@ -248,7 +249,7 @@ export default function ProjectDetail() {
           <div className="relative z-10 w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl dark:border-gray-700/50 dark:bg-gray-800">
             <h3 className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">Delete Project?</h3>
             <p className="mb-4 text-xs text-gray-500">
-              This will permanently delete "{currentProject.name}" and all its tasks.
+              This will permanently delete &quot;{currentProject.name}&quot; and all its tasks.
             </p>
             <div className="flex gap-2">
               <button

@@ -6,9 +6,7 @@ import {
   Pause,
   Circle,
   Calendar,
-  ChevronRight,
   Trash2,
-  Edit3,
   Milestone,
 } from 'lucide-react';
 import clsx from 'clsx';
@@ -54,7 +52,7 @@ export default function Goals() {
       const fresh = goals.find((g) => g._id === showDetail._id);
       if (fresh) setShowDetail(fresh);
     }
-  }, [goals]);
+  }, [goals, showDetail]);
 
   const filteredGoals = goals.filter((g) => filter === 'all' || g.status === filter);
 
@@ -276,7 +274,7 @@ export default function Goals() {
                   </button>
                 ))}
               </div>
-              <button onClick={() => deleteGoal(showDetail._id)} className="ml-auto p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
+              <button aria-label="Delete goal" onClick={() => deleteGoal(showDetail._id)} className="ml-auto p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>

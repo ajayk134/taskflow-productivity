@@ -16,7 +16,6 @@ import {
   endOfWeek,
   addWeeks,
 } from 'date-fns';
-import clsx from 'clsx';
 
 export default function Upcoming() {
   const { todos, fetchTodos, isLoading } = useTodoStore();

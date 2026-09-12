@@ -1,14 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Plus,
   FolderKanban,
-  MoreHorizontal,
   Trash2,
   Edit3,
   Archive,
   CheckCircle2,
-  Clock,
-  ChevronDown,
 } from 'lucide-react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';

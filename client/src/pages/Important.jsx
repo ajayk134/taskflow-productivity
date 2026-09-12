@@ -6,7 +6,6 @@ import TodoItem from '../components/todo/TodoItem';
 import TodoDetail from '../components/todo/TodoDetail';
 import BulkActions from '../components/todo/BulkActions';
 import { Star } from 'lucide-react';
-import clsx from 'clsx';
 
 export default function Important() {
   const { todos, fetchTodos, isLoading } = useTodoStore();

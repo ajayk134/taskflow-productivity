@@ -22,11 +22,8 @@ import {
   RotateCcw,
   Check,
   Plus,
-  GripVertical,
-  ChevronDown,
-  ChevronRight,
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 
@@ -228,7 +225,7 @@ export default function TodoDetail({ todo, onClose }) {
 
   useEffect(() => {
     setLocal({ ...todo });
-  }, [todo?.id]);
+  }, [todo]);
 
   const update = (field, value) => {
     setLocal((prev) => ({ ...prev, [field]: value }));
@@ -307,7 +304,7 @@ export default function TodoDetail({ todo, onClose }) {
     ];
     update('checklist', items);
     setNewCheckItem('');
-    save('checklist');
+    save('checklist', items);
   };
 
   const addLink = () => {

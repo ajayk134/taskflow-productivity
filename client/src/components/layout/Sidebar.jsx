@@ -26,7 +26,6 @@ import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import useUIStore from '../../stores/uiStore';
 import useProjectStore from '../../stores/projectStore';
-import useAuthStore from '../../stores/authStore';
 import useTodoStore from '../../stores/todoStore';
 import api from '../../utils/api';
 
@@ -35,7 +34,6 @@ const TAG_COLORS = ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 export default function Sidebar() {
   const { toggleSidebar, setCurrentView } = useUIStore();
   const { projects, fetchProjects } = useProjectStore();
-  const { user } = useAuthStore();
   const { todos, fetchTodos } = useTodoStore();
   const location = useLocation();
   const navigate = useNavigate();

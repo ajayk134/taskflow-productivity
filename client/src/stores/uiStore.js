@@ -1,7 +1,6 @@
 import { create } from 'zustand';
-import api from '../utils/api';
 
-const useUIStore = create((set, get) => ({
+const useUIStore = create((set, _get) => ({
   sidebarOpen: true,
   sidebarCollapsed: false,
   commandPaletteOpen: false,

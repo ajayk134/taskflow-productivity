@@ -5,7 +5,7 @@ import QuickAdd from '../components/todo/QuickAdd';
 import TodoList from '../components/todo/TodoList';
 import TodoDetail from '../components/todo/TodoDetail';
 import BulkActions from '../components/todo/BulkActions';
-import { Inbox as InboxIcon, Mail } from 'lucide-react';
+import { Inbox as InboxIcon } from 'lucide-react';
 
 export default function Inbox() {
   const { todos, fetchTodos, isLoading } = useTodoStore();

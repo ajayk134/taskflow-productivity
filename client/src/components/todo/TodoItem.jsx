@@ -5,7 +5,6 @@ import { useProjectStore } from '../../stores/projectStore';
 import {
   Check,
   Calendar,
-  Flag,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -21,7 +20,6 @@ import {
   isTomorrow,
   isPast,
   parseISO,
-  formatDistanceToNow,
 } from 'date-fns';
 import clsx from 'clsx';
 

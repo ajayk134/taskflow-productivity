@@ -25,10 +25,19 @@ import Notes from './pages/Notes';
 import Settings from './pages/Settings';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
+import { applyAccent, DEFAULT_ACCENT } from './utils/theme';
+
+const DEFAULT_VIEW_ROUTES = ['inbox', 'today', 'my-day', 'upcoming', 'kanban'];
+
+function HomeRedirect() {
+  const view = localStorage.getItem('taskflow_defaultView') || 'inbox';
+  const target = DEFAULT_VIEW_ROUTES.includes(view) ? `/${view}` : '/inbox';
+  return <Navigate to={target} replace />;
+}
 
 function App() {
-  const { isAuthenticated, isLoading, init } = useAuthStore();
-  const { theme, setTheme } = useUIStore();
+  const { isAuthenticated, init } = useAuthStore();
+  const { theme } = useUIStore();
   const [initialized, setInitialized] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -38,6 +47,10 @@ function App() {
   useEffect(() => {
     init().finally(() => setInitialized(true));
   }, [init]);
+
+  useEffect(() => {
+    applyAccent(localStorage.getItem('taskflow_accent') || DEFAULT_ACCENT);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -119,7 +132,7 @@ function App() {
           </>
         ) : (
           <Route element={<Layout />}>
-            <Route path="/" element={<Navigate to="/inbox" replace />} />
+            <Route path="/" element={<HomeRedirect />} />
             <Route path="/inbox" element={<Inbox />} />
             <Route path="/my-day" element={<MyDay />} />
             <Route path="/today" element={<MyDay />} />

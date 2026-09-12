@@ -214,10 +214,10 @@ describe('parseNaturalLanguage', () => {
     // "Submit form in 3 days" → time regex matches "3" → title becomes "Submit form in days"
     // which does not match "in N days". This is a known parser limitation.
     // Testing with a time prefix avoids this:
-    const result = parseNaturalLanguage('Submit form in 3 days at 2pm');
+    const _result = parseNaturalLanguage('Submit form in 3 days at 2pm');
     // The "at 2pm" time is extracted, but "in 3" was consumed by the time regex earlier.
     // Instead, test the pattern with a non-numeric prefix:
-    const result2 = parseNaturalLanguage('Finish report in 3 days');
+    const _result2 = parseNaturalLanguage('Finish report in 3 days');
     // "3" gets consumed by time regex → no date extracted
     // The parser works correctly when time patterns don't interfere:
     const result3 = parseNaturalLanguage('Finish report next monday');

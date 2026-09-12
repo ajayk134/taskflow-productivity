@@ -4,7 +4,7 @@ import { useUIStore } from '../stores/uiStore';
 import TodoItem from '../components/todo/TodoItem';
 import TodoDetail from '../components/todo/TodoDetail';
 import BulkActions from '../components/todo/BulkActions';
-import { CheckCircle2, Trash2, Archive } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import clsx from 'clsx';
 

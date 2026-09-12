@@ -7,10 +7,9 @@ import TodoDetail from '../components/todo/TodoDetail';
 import BulkActions from '../components/todo/BulkActions';
 import { Sun, Clock, AlertTriangle, Sparkles, CheckCircle2 } from 'lucide-react';
 import { isPast, parseISO, isToday, format } from 'date-fns';
-import clsx from 'clsx';
 
 export default function MyDay() {
-  const { todos, fetchTodos, fetchMyDay, myDay, isLoading } = useTodoStore();
+  const { todos, fetchTodos, fetchMyDay, isLoading } = useTodoStore();
   const { selectedTodos } = useUIStore();
   const [selectedTodo, setSelectedTodo] = useState(null);
 
@@ -190,7 +189,7 @@ export default function MyDay() {
         {!isLoading && myDayTodos.length === 0 && overdue.length === 0 && todayTasks.length === 0 && (
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-800/50 dark:bg-gray-800/20">
             <Sparkles size={32} className="mx-auto mb-3 text-amber-500/30" />
-            <h3 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">You're all caught up!</h3>
+            <h3 className="mb-1 text-sm font-medium text-gray-500 dark:text-gray-400">You&apos;re all caught up!</h3>
             <p className="text-xs text-gray-500 dark:text-gray-600">
               Add tasks to your day or check your inbox for new items.
             </p>

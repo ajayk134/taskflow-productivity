@@ -30,7 +30,7 @@ export default function BulkActions() {
   const [tagInput, setTagInput] = useState('');
 
   const { bulkUpdate, bulkDelete } = useTodoStore();
-  const { selectedTodos, toggleSelectTodo, selectAllTodos, clearSelection } = useUIStore();
+  const { selectedTodos, selectAllTodos, clearSelection } = useUIStore();
   const { projects } = useProjectStore();
 
   const count = selectedTodos?.length || 0;

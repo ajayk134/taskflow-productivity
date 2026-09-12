@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import {
-  BarChart3,
   CheckCircle2,
   Clock,
   TrendingUp,
@@ -11,8 +10,6 @@ import {
 import clsx from 'clsx';
 import { format, subDays, startOfDay, isToday, isThisWeek, isThisMonth, parseISO } from 'date-fns';
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart,
@@ -54,14 +51,13 @@ function StatCard({ icon: Icon, label, value, change, color }) {
 
 export default function Analytics() {
   const { todos, fetchTodos } = useTodoStore();
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     fetchTodos().finally(() => setLoading(false));
   }, [fetchTodos]);
 
   const stats = useMemo(() => {
-    const now = new Date();
     const completedToday = todos.filter((t) => t.completed && t.completedAt && isToday(parseISO(t.completedAt))).length;
     const completedThisWeek = todos.filter((t) => t.completed && t.completedAt && isThisWeek(parseISO(t.completedAt))).length;
     const completedThisMonth = todos.filter((t) => t.completed && t.completedAt && isThisMonth(parseISO(t.completedAt))).length;

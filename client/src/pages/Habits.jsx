@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Plus,
   Flame,
   TrendingUp,
   CheckCircle2,
   Archive,
-  X,
   Repeat,
   Smile,
   Zap,
@@ -16,7 +15,7 @@ import {
   Droplets,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { format, subDays, isSameDay, parseISO } from 'date-fns';
+import { format, subDays, isSameDay } from 'date-fns';
 import toast from 'react-hot-toast';
 import { api } from '../utils/api';
 import Modal from '../components/common/Modal';
@@ -63,9 +62,7 @@ export default function Habits() {
   }, [fetchHabits, fetchCompletions]);
 
   const today = new Date();
-  const last30Days = useMemo(() =>
-    Array.from({ length: 30 }, (_, i) => subDays(today, 29 - i)),
-  []);
+  const last30Days = Array.from({ length: 30 }, (_, i) => subDays(today, 29 - i));
 
   const toggleCompletion = async (habitId, date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -97,21 +94,6 @@ export default function Habits() {
       else break;
     }
     return streak;
-  };
-
-  const getLongestStreak = (habitId) => {
-    let longest = 0;
-    let current = 0;
-    for (const day of last30Days) {
-      const key = `${habitId}:${format(day, 'yyyy-MM-dd')}`;
-      if (completions[key]) {
-        current++;
-        longest = Math.max(longest, current);
-      } else {
-        current = 0;
-      }
-    }
-    return longest;
   };
 
   const getCompletionRate = (habitId) => {
@@ -183,7 +165,6 @@ export default function Habits() {
         {habits.map((habit) => {
           const isCompletedToday = completions[`${habit._id}:${format(today, 'yyyy-MM-dd')}`];
           const streak = getStreak(habit._id);
-          const longest = getLongestStreak(habit._id);
           const rate = getCompletionRate(habit._id);
           const iconIdx = HABIT_ICON_NAMES.indexOf(habit.icon);
           const IconComp = iconIdx >= 0 ? HABIT_ICONS[iconIdx] : Repeat;

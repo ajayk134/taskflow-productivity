@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Play,
   Pause,
@@ -7,8 +6,6 @@ import {
   RotateCcw,
   Volume2,
   VolumeX,
-  ChevronDown,
-  Timer,
   Coffee,
   Zap,
   X,
@@ -39,11 +36,10 @@ function playNotificationSound() {
     setTimeout(() => { osc.frequency.value = 600; }, 100);
     setTimeout(() => { osc.frequency.value = 800; }, 200);
     setTimeout(() => { osc.stop(); ctx.close(); }, 400);
-  } catch {}
+  } catch { /* audio context unavailable */ }
 }
 
 export default function FocusMode({ onClose, currentTask }) {
-  const navigate = useNavigate();
   const [preset, setPreset] = useState(0);
   const [phase, setPhase] = useState(PHASES.WORK);
   const [isRunning, setIsRunning] = useState(false);
@@ -58,9 +54,10 @@ export default function FocusMode({ onClose, currentTask }) {
   const [customLong, setCustomLong] = useState(15);
   const intervalRef = useRef(null);
 
-  const currentPreset = preset === 3
+  const currentPreset = useMemo(() => preset === 3
     ? { work: customWork * 60, shortBreak: customShort * 60, longBreak: customLong * 60 }
-    : PRESETS[preset];
+    : PRESETS[preset],
+  [preset, customWork, customShort, customLong]);
 
   const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
 
@@ -159,6 +156,7 @@ export default function FocusMode({ onClose, currentTask }) {
       </button>
 
       <button
+        aria-label="Timer Settings"
         onClick={() => setShowSettings(!showSettings)}
         className="absolute top-6 right-16 p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
       >
@@ -279,6 +277,8 @@ export default function FocusMode({ onClose, currentTask }) {
           <RotateCcw className="w-5 h-5" />
         </button>
         <button
+          aria-label={isRunning ? 'Pause timer' : 'Start timer'}
+          title={isRunning ? 'Pause timer' : 'Start timer'}
           onClick={() => setIsRunning(!isRunning)}
           className={clsx(
             'p-5 rounded-2xl transition-all duration-200 shadow-xl',

@@ -17,7 +17,6 @@ import { CSS } from '@dnd-kit/utilities';
 import {
   Plus,
   GripVertical,
-  MoreHorizontal,
   Circle,
   CheckCircle2,
   Clock,
@@ -106,11 +105,10 @@ function KanbanCard({ todo, onOpen }) {
   );
 }
 
-function KanbanColumn({ column, todos, onAddTask, onOpenTask }) {
+function KanbanColumn({ column, todos, _onAddTask, onOpenTask }) {
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState('');
-  const { createTodo, updateTodo, fetchTodos } = useTodoStore();
-  const { projects } = useProjectStore();
+  const { createTodo, fetchTodos } = useTodoStore();
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
     data: { column },
@@ -191,7 +189,7 @@ function KanbanColumn({ column, todos, onAddTask, onOpenTask }) {
 }
 
 export default function Kanban() {
-  const { todos, fetchTodos, bulkUpdate, updateTodo } = useTodoStore();
+  const { todos, fetchTodos, updateTodo } = useTodoStore();
   const { projects, fetchProjects } = useProjectStore();
   const [selectedProject, setSelectedProject] = useState('all');
   const [activeId, setActiveId] = useState(null);
