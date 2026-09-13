@@ -1,6 +1,71 @@
 import Habit from '../models/Habit.js';
 import Activity from '../models/Activity.js';
-import { getStartOfDay, getEndOfDay } from '../utils/helpers.js';
+
+// ─── Date handling ────────────────────────────────────────────────────────────
+// Habit completions are identified by *calendar date* keys (`YYYY-MM-DD`). The
+// client sends its local calendar date so "today" is always the user's today.
+// All log dates and window bounds are compared in UTC so results are stable
+// regardless of the server or client timezone.
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export const dateKey = (date) => {
+  const d = date instanceof Date ? date : new Date(date);
+  return d.toISOString().split('T')[0];
+};
+
+export const parseDateKey = (key) => {
+  if (!key || typeof key !== 'string') return null;
+  const m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  return new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+};
+
+// The server's "today" in UTC, used as a fallback when the client does not send
+// its own calendar date.
+export const utcTodayKey = () => dateKey(new Date());
+
+export const addDaysKey = (key, days) => {
+  const d = parseDateKey(key) || new Date();
+  d.setUTCDate(d.getUTCDate() + days);
+  return dateKey(d);
+};
+
+// Recompute a habit's streaks from its completed log dates. `todayKey` is the
+// user's calendar date so the "current streak" is anchored on their today.
+function recomputeStreaks(habit, todayKey) {
+  const done = new Set();
+  for (const log of habit.logs || []) {
+    if (log.completed && log.date) done.add(dateKey(log.date));
+  }
+
+  let current = 0;
+  let cursor = parseDateKey(todayKey) || new Date();
+  while (done.has(dateKey(cursor))) {
+    current += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+
+  const sorted = [...done].sort();
+  let longest = 0;
+  let run = 0;
+  let prev = null;
+  for (const key of sorted) {
+    if (prev && parseDateKey(key) - parseDateKey(prev) === DAY_MS) {
+      run += 1;
+    } else {
+      run = 1;
+    }
+    longest = Math.max(longest, run);
+    prev = key;
+  }
+
+  habit.currentStreak = current;
+  habit.longestStreak = Math.max(habit.longestStreak || 0, longest);
+  return habit;
+}
+
+// ─── CRUD ─────────────────────────────────────────────────────────────────────
 
 export const createHabit = async (req, res) => {
   try {
@@ -53,29 +118,41 @@ export const deleteHabit = async (req, res) => {
   }
 };
 
+// ─── Completions ──────────────────────────────────────────────────────────────
+
+const parseDay = (req, fallbackKey) => {
+  const bodyDate = req.body?.date || req.params?.date || fallbackKey;
+  const key = dateKey(bodyDate);
+  const parsed = parseDateKey(key);
+  if (!parsed) return null;
+  return parsed;
+};
+
+const todayKeyOf = (req) => {
+  const k = req.body?.today || req.query?.today;
+  const parsed = parseDateKey(k);
+  return parsed ? dateKey(parsed) : utcTodayKey();
+};
+
+// Legacy toggle endpoint: flips completion for today (or the given date).
 export const logHabit = async (req, res) => {
   try {
     const habit = await Habit.findOne({ _id: req.params.id, userId: req.userId });
     if (!habit) return res.status(404).json({ error: 'Habit not found' });
 
-    const today = getStartOfDay();
-    const existingLog = habit.logs.find(l =>
-      l.date.toISOString().split('T')[0] === today.toISOString().split('T')[0]
-    );
+    const today = todayKeyOf(req);
+    const target = parseDay(req, today);
+    if (!target) return res.status(400).json({ error: 'Invalid date provided' });
+    const key = dateKey(target);
 
-    if (existingLog) {
-      // Toggle off
-      habit.logs = habit.logs.filter(l =>
-        l.date.toISOString().split('T')[0] !== today.toISOString().split('T')[0]
-      );
-      habit.currentStreak = Math.max(0, habit.currentStreak - 1);
+    const existingIndex = habit.logs.findIndex((l) => dateKey(l.date) === key);
+    if (existingIndex !== -1) {
+      habit.logs.splice(existingIndex, 1);
     } else {
-      // Log completion
-      habit.logs.push({ date: today, completed: true, notes: req.body.notes || '' });
-      habit.currentStreak += 1;
-      habit.longestStreak = Math.max(habit.longestStreak, habit.currentStreak);
+      habit.logs.push({ date: target, completed: true, notes: req.body.notes || '' });
     }
 
+    recomputeStreaks(habit, today);
     await habit.save();
     await Activity.create({ userId: req.userId, action: 'habit-completed', entityType: 'habit', entityId: habit._id, entityTitle: habit.name });
 
@@ -85,26 +162,24 @@ export const logHabit = async (req, res) => {
   }
 };
 
-const dateKey = (date) => {
-  const d = date instanceof Date ? date : new Date(date);
-  return d.toISOString().split('T')[0];
-};
-
+// GET /api/habits/completions?days=N&today=YYYY-MM-DD
+// Returns a map of `${habitId}:${YYYY-MM-DD}` -> true for the window of the
+// user's `days` ending at `today`. `today` is the client's calendar date so
+// users ahead of or behind UTC never lose their current-day completion.
 export const getHabitCompletions = async (req, res) => {
   try {
-    const { days = 30 } = req.query;
-    const daysNum = parseInt(days) || 30;
-
-    const today = getStartOfDay();
-    const todayEnd = getEndOfDay(today);
-    const windowStart = new Date(today);
-    windowStart.setDate(windowStart.getDate() - (daysNum - 1));
+    const daysNum = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 365);
+    const today = todayKeyOf(req);
+    const windowEnd = parseDateKey(addDaysKey(today, 1));
+    const windowStart = parseDateKey(addDaysKey(today, -(daysNum - 1)));
 
     const habits = await Habit.find({ userId: req.userId, isArchived: false }).select('logs');
     const completions = {};
     for (const habit of habits) {
       for (const log of habit.logs) {
-        if (log.date >= windowStart && log.date <= todayEnd) {
+        const d = log.date instanceof Date ? log.date : new Date(log.date);
+        if (!log.completed || Number.isNaN(d.getTime())) continue;
+        if (d >= windowStart && d < windowEnd) {
           completions[`${habit._id}:${dateKey(log.date)}`] = true;
         }
       }
@@ -115,53 +190,56 @@ export const getHabitCompletions = async (req, res) => {
   }
 };
 
+// POST /api/habits/:id/completions { date: 'YYYY-MM-DD', today?: 'YYYY-MM-DD' }
+// Logs a completion for the given calendar date, deduplicating existing entries.
 export const logHabitCompletion = async (req, res) => {
   try {
     const habit = await Habit.findOne({ _id: req.params.id, userId: req.userId });
     if (!habit) return res.status(404).json({ error: 'Habit not found' });
 
-    const targetDate = req.body.date ? new Date(req.body.date) : getStartOfDay();
-    if (Number.isNaN(targetDate.getTime())) {
-      return res.status(400).json({ error: 'Invalid date provided' });
-    }
+    const today = todayKeyOf(req);
+    const target = parseDay(req, today);
+    if (!target) return res.status(400).json({ error: 'Invalid date provided' });
 
-    const key = dateKey(targetDate);
-    const existing = habit.logs.find(l => dateKey(l.date) === key);
+    const key = dateKey(target);
+    const existing = habit.logs.find((l) => dateKey(l.date) === key);
 
     if (!existing) {
-      const todayKey = dateKey(getStartOfDay());
-      habit.logs.push({ date: targetDate, completed: true, notes: req.body.notes || '' });
-      if (key === todayKey) {
-        habit.currentStreak += 1;
-        habit.longestStreak = Math.max(habit.longestStreak, habit.currentStreak);
-      }
+      habit.logs.push({ date: target, completed: true, notes: req.body.notes || '' });
+    } else if (!existing.completed) {
+      existing.completed = true;
+      existing.notes = req.body.notes || existing.notes;
     }
 
+    recomputeStreaks(habit, today);
     await habit.save();
     await Activity.create({ userId: req.userId, action: 'habit-completed', entityType: 'habit', entityId: habit._id, entityTitle: habit.name });
+
     res.json({ habit });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
+// DELETE /api/habits/:id/completions/:date
 export const removeHabitCompletion = async (req, res) => {
   try {
     const habit = await Habit.findOne({ _id: req.params.id, userId: req.userId });
     if (!habit) return res.status(404).json({ error: 'Habit not found' });
 
-    const key = req.params.date || dateKey(getStartOfDay());
-    const index = habit.logs.findIndex(l => dateKey(l.date) === key);
+    const today = req.query.today
+      ? todayKeyOf(req)
+      : utcTodayKey();
 
+    const key = req.params.date ? req.params.date.split('T')[0] : today;
+    const index = habit.logs.findIndex((l) => dateKey(l.date) === key);
     if (index === -1) {
       res.status(404).json({ error: 'Completion not found' });
       return;
     }
 
     habit.logs.splice(index, 1);
-    if (key === dateKey(getStartOfDay())) {
-      habit.currentStreak = Math.max(0, habit.currentStreak - 1);
-    }
+    recomputeStreaks(habit, today);
     await habit.save();
     res.json({ habit });
   } catch (error) {
@@ -169,28 +247,34 @@ export const removeHabitCompletion = async (req, res) => {
   }
 };
 
+// GET /api/habits/:id/stats?days=30&today=YYYY-MM-DD
 export const getHabitStats = async (req, res) => {
   try {
     const habit = await Habit.findOne({ _id: req.params.id, userId: req.userId });
     if (!habit) return res.status(404).json({ error: 'Habit not found' });
 
-    const today = getStartOfDay();
-    const thirtyDaysAgo = new Date(today);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const daysNum = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 365);
+    const today = req.query.today ? todayKeyOf(req) : utcTodayKey();
+    const windowEnd = parseDateKey(addDaysKey(today, 1));
+    const windowStart = parseDateKey(addDaysKey(today, -(daysNum - 1)));
 
-    const last30Days = habit.logs.filter(l => l.date >= thirtyDaysAgo);
-    const completedDays = last30Days.length;
-    const completionRate = Math.round((completedDays / 30) * 100);
+    const keys = new Set();
+    for (const log of habit.logs) {
+      const d = log.date instanceof Date ? log.date : new Date(log.date);
+      if (log.completed && d >= windowStart && d < windowEnd) {
+        keys.add(dateKey(log.date));
+      }
+    }
 
-    // Monthly data for chart
+    recomputeStreaks(habit, today);
+
+    const completedDays = keys.size;
+    const completionRate = Math.round((completedDays / daysNum) * 100);
+
     const monthlyData = [];
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const completed = habit.logs.some(l =>
-        l.date.toISOString().split('T')[0] === date.toISOString().split('T')[0]
-      );
-      monthlyData.push({ date: date.toISOString().split('T')[0], completed });
+    for (let i = daysNum - 1; i >= 0; i--) {
+      const dayKey = addDaysKey(today, -i);
+      monthlyData.push({ date: dayKey, completed: keys.has(dayKey) });
     }
 
     res.json({

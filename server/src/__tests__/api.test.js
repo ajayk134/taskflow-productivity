@@ -1005,6 +1005,62 @@ describe('Habits API', () => {
 
     expect(res.status).toBe(200);
   });
+
+  it('completions persist for a client day ahead of server UTC today when today is passed', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Timezone window' });
+
+    const ahead = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const aheadKey = ahead.toISOString().split('T')[0];
+
+    await request(app)
+      .post(`/api/habits/${create.body.habit._id}/completions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: aheadKey, today: aheadKey });
+
+    const res = await request(app)
+      .get('/api/habits/completions')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ days: '30', today: aheadKey });
+
+    expect(res.status).toBe(200);
+    expect(res.body.completions[`${create.body.habit._id.toString()}:${aheadKey}`]).toBe(true);
+  });
+
+  it('archive, hide from list, restore via includeArchived flow', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Archive flow' });
+
+    const id = create.body.habit._id;
+
+    const archived = await request(app)
+      .put(`/api/habits/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ isArchived: true });
+    expect(archived.status).toBe(200);
+    expect(archived.body.habit.isArchived).toBe(true);
+
+    const defaultList = await request(app)
+      .get('/api/habits')
+      .set('Authorization', `Bearer ${token}`);
+    expect(defaultList.body.habits.some(h => h._id.toString() === id.toString())).toBe(false);
+
+    const withArchived = await request(app)
+      .get('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ includeArchived: 'true' });
+    expect(withArchived.body.habits.some(h => h._id.toString() === id.toString())).toBe(true);
+
+    const restored = await request(app)
+      .put(`/api/habits/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ isArchived: false });
+    expect(restored.body.habit.isArchived).toBe(false);
+  });
 });
 
 // ─── Goals ───────────────────────────────────────────────

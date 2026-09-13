@@ -5,6 +5,8 @@ import {
   TrendingUp,
   CheckCircle2,
   Archive,
+  RefreshCcw,
+  Search,
   Repeat,
   Smile,
   Zap,
@@ -26,6 +28,9 @@ const HABIT_ICON_NAMES = ['repeat', 'zap', 'heart', 'dumbbell', 'book', 'moon', 
 const HABIT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 const FREQUENCIES = ['daily', 'weekly', 'custom'];
 
+const localDateKey = (date = new Date()) => format(date, 'yyyy-MM-dd');
+const TABS = ['active', 'archived'];
+
 export default function Habits() {
   const [habits, setHabits] = useState([]);
   const [completions, setCompletions] = useState({});
@@ -35,11 +40,13 @@ export default function Habits() {
   const [newColor, setNewColor] = useState(0);
   const [newFrequency, setNewFrequency] = useState('daily');
   const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState('active');
+  const [search, setSearch] = useState('');
 
   const fetchHabits = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.get('/habits');
+      const data = await api.get('/habits', { includeArchived: 'true' });
       setHabits(data.habits || []);
     } catch {
       setHabits([]);
@@ -49,7 +56,7 @@ export default function Habits() {
 
   const fetchCompletions = useCallback(async () => {
     try {
-      const data = await api.get('/habits/completions', { days: '30' });
+      const data = await api.get('/habits/completions', { days: '30', today: localDateKey() });
       setCompletions(data.completions || {});
     } catch {
       setCompletions({});
@@ -71,14 +78,14 @@ export default function Habits() {
 
     try {
       if (isCompleted) {
-        await api.delete(`/habits/${habitId}/completions/${dateStr}`);
+        await api.delete(`/habits/${habitId}/completions/${dateStr}?today=${localDateKey()}`);
         setCompletions((prev) => {
           const next = { ...prev };
           delete next[key];
           return next;
         });
       } else {
-        await api.post(`/habits/${habitId}/completions`, { date: dateStr });
+        await api.post(`/habits/${habitId}/completions`, { date: dateStr, today: localDateKey() });
         setCompletions((prev) => ({ ...prev, [key]: true }));
       }
     } catch {
@@ -103,6 +110,25 @@ export default function Habits() {
       if (completions[key]) count++;
     }
     return Math.round((count / 30) * 100);
+  };
+
+  const getCompletionRateFromLogs = (habit) => {
+    const doneKeys = new Set(
+      (habit.logs || [])
+        .filter((l) => l.completed && l.date)
+        .map((l) => new Date(l.date).toISOString().split('T')[0])
+    );
+    let count = 0;
+    for (const day of last30Days) {
+      if (doneKeys.has(format(day, 'yyyy-MM-dd'))) count++;
+    }
+    return Math.round((count / 30) * 100);
+  };
+
+  const archivedDoneFor = (habit, dayKey) => {
+    return (habit.logs || []).some(
+      (l) => l.completed && new Date(l.date).toISOString().split('T')[0] === dayKey
+    );
   };
 
   const handleCreate = async () => {
@@ -135,7 +161,23 @@ export default function Habits() {
     }
   };
 
-  const todayCompleted = habits.filter((h) => completions[`${h._id}:${format(today, 'yyyy-MM-dd')}`]).length;
+  const restoreHabit = async (id) => {
+    try {
+      await api.put(`/habits/${id}`, { isArchived: false });
+      toast.success('Habit restored');
+      fetchHabits();
+      fetchCompletions();
+    } catch {
+      toast.error('Failed to restore habit');
+    }
+  };
+
+  const activeHabits = habits.filter((h) => !h.isArchived);
+  const archivedHabits = habits.filter((h) => h.isArchived);
+  const query = (search || '').trim().toLowerCase();
+  const visibleHabits = (tab === 'archived' ? archivedHabits : activeHabits)
+    .filter((h) => !query || h.name.toLowerCase().includes(query));
+  const todayCompleted = activeHabits.filter((h) => completions[`${h._id}:${localDateKey()}`]).length;
 
   return (
     <div className="space-y-6">
@@ -143,7 +185,7 @@ export default function Habits() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Habits</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {todayCompleted}/{habits.length} completed today
+            {todayCompleted}/{activeHabits.length} completed today
           </p>
         </div>
         <button onClick={() => setShowCreate(true)} className="btn-primary btn-sm">
@@ -151,21 +193,55 @@ export default function Habits() {
         </button>
       </div>
 
-      {habits.length === 0 && !loading && (
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex gap-2">
+          {TABS.map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={clsx(
+                'px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors',
+                tab === t ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+              )}
+            >
+              {t === 'active'
+                ? `Active (${activeHabits.length})`
+                : `Archived (${archivedHabits.length})`}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex-1 sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search habits..."
+            className="input pl-9 py-1.5 text-sm"
+          />
+        </div>
+      </div>
+
+      {visibleHabits.length === 0 && !loading && (
         <EmptyState
           icon={Repeat}
-          title="No habits yet"
-          description="Start building positive habits by creating your first one."
-          onAction={() => setShowCreate(true)}
-          actionLabel="Create Habit"
+          title={tab === 'archived' ? 'No archived habits' : 'No habits yet'}
+          description={
+            tab === 'archived'
+              ? 'Archive a habit to keep it here.'
+              : 'Start building positive habits by creating your first one.'
+          }
+          onAction={tab === 'archived' ? undefined : () => setShowCreate(true)}
+          actionLabel={tab === 'archived' ? undefined : 'Create Habit'}
         />
       )}
 
       <div className="space-y-4">
-        {habits.map((habit) => {
-          const isCompletedToday = completions[`${habit._id}:${format(today, 'yyyy-MM-dd')}`];
-          const streak = getStreak(habit._id);
-          const rate = getCompletionRate(habit._id);
+        {visibleHabits.map((habit) => {
+          const isArchivedView = tab === 'archived';
+          const isCompletedToday = completions[`${habit._id}:${localDateKey()}`];
+          const streak = isArchivedView ? (habit.currentStreak || 0) : getStreak(habit._id);
+          const rate = isArchivedView ? getCompletionRateFromLogs(habit) : getCompletionRate(habit._id);
           const iconIdx = HABIT_ICON_NAMES.indexOf(habit.icon);
           const IconComp = iconIdx >= 0 ? HABIT_ICONS[iconIdx] : Repeat;
 
@@ -173,12 +249,14 @@ export default function Habits() {
             <div key={habit._id} className="card p-5 hover:shadow-md transition-shadow">
               <div className="flex items-start gap-4">
                 <button
-                  onClick={() => toggleCompletion(habit._id, today)}
+                  onClick={() => !isArchivedView && toggleCompletion(habit._id, today)}
+                  disabled={isArchivedView}
                   className={clsx(
                     'flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200',
                     isCompletedToday
                       ? 'text-white shadow-md'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300',
+                    isArchivedView && 'opacity-60'
                   )}
                   style={isCompletedToday ? { backgroundColor: habit.color || '#3b82f6' } : {}}
                 >
@@ -195,6 +273,11 @@ export default function Habits() {
                     <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 capitalize">
                       {habit.frequency || 'daily'}
                     </span>
+                    {isArchivedView && (
+                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 capitalize">
+                        Archived
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-4 mb-3">
@@ -208,24 +291,36 @@ export default function Habits() {
                       <span className="font-semibold text-gray-600 dark:text-gray-300">{rate}%</span>
                       <span className="text-gray-400">rate</span>
                     </div>
-                    <button
-                      onClick={() => archiveHabit(habit._id)}
-                      className="ml-auto p-1 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                      title="Archive"
-                    >
-                      <Archive className="w-3.5 h-3.5" />
-                    </button>
+                    {isArchivedView ? (
+                      <button
+                        onClick={() => restoreHabit(habit._id)}
+                        className="ml-auto inline-flex items-center gap-1 p-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
+                        title="Restore"
+                      >
+                        <RefreshCcw className="w-3.5 h-3.5" /> Restore
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => archiveHabit(habit._id)}
+                        className="ml-auto p-1 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                        title="Archive"
+                      >
+                        <Archive className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
 
                   <div className="flex gap-[3px] overflow-x-auto min-w-0 pb-0.5 -mx-1 px-1">
                     {last30Days.map((day) => {
-                      const key = `${habit._id}:${format(day, 'yyyy-MM-dd')}`;
-                      const done = completions[key];
+                      const dayKey = format(day, 'yyyy-MM-dd');
+                      const key = `${habit._id}:${dayKey}`;
+                      const done = isArchivedView ? archivedDoneFor(habit, dayKey) : completions[key];
                       const isToday = isSameDay(day, today);
                       return (
                         <button
                           key={key}
-                          onClick={() => toggleCompletion(habit._id, day)}
+                          onClick={() => !isArchivedView && toggleCompletion(habit._id, day)}
+                          disabled={isArchivedView}
                           className={clsx(
                             'w-2.5 h-2.5 rounded-sm transition-all hover:scale-125 flex-shrink-0',
                             done ? 'opacity-100' : 'bg-gray-100 dark:bg-gray-700 opacity-50 hover:opacity-75',
