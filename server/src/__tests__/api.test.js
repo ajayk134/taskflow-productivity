@@ -921,7 +921,7 @@ describe('Habits API', () => {
     expect(res.body.habit.currentStreak).toBe(0);
   });
 
-  it('GET /api/habits/:id/stats returns stats', async () => {
+  it('GET /api/habits/:id/stats returns all-time stats by default', async () => {
     const create = await request(app)
       .post('/api/habits')
       .set('Authorization', `Bearer ${token}`)
@@ -934,6 +934,24 @@ describe('Habits API', () => {
     expect(res.status).toBe(200);
     expect(res.body.completionRate).toBeDefined();
     expect(Array.isArray(res.body.monthlyData)).toBe(true);
+    // Default is the habit's full history (a fresh habit = today only), not a
+    // fixed 30-day window, so nothing older than 30 days is ever hidden.
+    expect(res.body.monthlyData.length).toBeGreaterThanOrEqual(1);
+    expect(res.body.monthlyData.some((d) => d.date === new Date().toISOString().split('T')[0])).toBe(true);
+  });
+
+  it('GET /api/habits/:id/stats honors an explicit days window', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Windowed stats' });
+
+    const res = await request(app)
+      .get(`/api/habits/${create.body.habit._id}/stats`)
+      .set('Authorization', `Bearer ${token}`)
+      .query({ days: '30' });
+
+    expect(res.status).toBe(200);
     expect(res.body.monthlyData.length).toBe(30);
   });
 
@@ -1060,6 +1078,138 @@ describe('Habits API', () => {
       .set('Authorization', `Bearer ${token}`)
       .send({ isArchived: false });
     expect(restored.body.habit.isArchived).toBe(false);
+  });
+
+  it('completions older than 30 days are returned when days is omitted', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Old completion habit' });
+
+    const oldDate = new Date(Date.now() - 45 * 24 * 60 * 60 * 1000);
+    const oldKey = oldDate.toISOString().split('T')[0];
+
+    await request(app)
+      .post(`/api/habits/${create.body.habit._id}/completions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: oldKey });
+
+    // No days param = full, unbounded history
+    const res = await request(app)
+      .get('/api/habits/completions')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.completions[`${create.body.habit._id.toString()}:${oldKey}`]).toBe(true);
+  });
+
+  it('streak greater than 30 days is computed correctly', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Long streak habit' });
+
+    const id = create.body.habit._id;
+    const today = new Date();
+    const todayKey = today.toISOString().split('T')[0];
+
+    // Log completions for 35 consecutive days ending today
+    for (let i = 34; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      await request(app)
+        .post(`/api/habits/${id}/completions`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ date: d.toISOString().split('T')[0], today: todayKey });
+    }
+
+    // Stats also report the correct streak (computed from full logs, not capped at 30)
+    const statsRes = await request(app)
+      .get(`/api/habits/${id}/stats`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(statsRes.status).toBe(200);
+    expect(statsRes.body.currentStreak).toBe(35);
+    expect(statsRes.body.longestStreak).toBeGreaterThanOrEqual(35);
+  });
+
+  it('old completion records are not automatically discarded', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Preserved history' });
+
+    const id = create.body.habit._id;
+    const oldDate = new Date(Date.now() - 40 * 24 * 60 * 60 * 1000);
+    const oldKey = oldDate.toISOString().split('T')[0];
+    const todayKey = new Date().toISOString().split('T')[0];
+
+    // Log old completion then today's
+    await request(app)
+      .post(`/api/habits/${id}/completions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: oldKey, today: todayKey });
+    await request(app)
+      .post(`/api/habits/${id}/completions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: todayKey, today: todayKey });
+
+    // Both dates should appear in the completions map (no age-based filtering)
+    const comps = await request(app)
+      .get('/api/habits/completions')
+      .set('Authorization', `Bearer ${token}`);
+    expect(comps.status).toBe(200);
+    expect(comps.body.completions[`${id}:${oldKey}`]).toBe(true);
+    expect(comps.body.completions[`${id}:${todayKey}`]).toBe(true);
+  });
+
+  it('archived habit retains history and restored habit retains history', async () => {
+    const create = await request(app)
+      .post('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ name: 'Archive with history' });
+
+    const id = create.body.habit._id;
+    const todayKey = new Date().toISOString().split('T')[0];
+    const oldDate = new Date(Date.now() - 35 * 24 * 60 * 60 * 1000);
+    const oldKey = oldDate.toISOString().split('T')[0];
+
+    // Add completions
+    await request(app)
+      .post(`/api/habits/${id}/completions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: oldKey, today: todayKey });
+    await request(app)
+      .post(`/api/habits/${id}/completions`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ date: todayKey, today: todayKey });
+
+    // Archive
+    await request(app)
+      .put(`/api/habits/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ isArchived: true });
+
+    // Archived habit still has history
+    const archivedList = await request(app)
+      .get('/api/habits')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ includeArchived: 'true' });
+    const archived = archivedList.body.habits.find((h) => h._id.toString() === id.toString());
+    expect(archived).toBeDefined();
+    expect(archived.logs.length).toBe(2);
+
+    // Restore
+    await request(app)
+      .put(`/api/habits/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ isArchived: false });
+
+    // Restored habit still has history
+    const restoredList = await request(app)
+      .get('/api/habits')
+      .set('Authorization', `Bearer ${token}`);
+    const restored = restoredList.body.habits.find((h) => h._id.toString() === id.toString());
+    expect(restored).toBeDefined();
+    expect(restored.logs.length).toBe(2);
   });
 });
 

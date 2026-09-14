@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Plus,
   Flame,
@@ -19,7 +19,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { format, subDays, isSameDay } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import toast from 'react-hot-toast';
 import { api } from '../utils/api';
 import Modal from '../components/common/Modal';
@@ -31,6 +31,63 @@ const HABIT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#e
 const FREQUENCIES = ['daily', 'weekly', 'custom'];
 
 const localDateKey = (date = new Date()) => format(date, 'yyyy-MM-dd');
+
+const parseLocalKey = (key) => {
+  const [y, m, d] = (key || '').split('-').map(Number);
+  if (!y || !m || !d) return new Date();
+  const date = new Date(y, m - 1, d, 0, 0, 0, 0);
+  return date;
+};
+
+// Contiguous range of calendar days from a habit's earliest completion (or
+// today if it has none) through today. No fixed-size window: the full, unbounded
+// history is always represented so streaks and rates are never capped.
+const historyDays = (dates, todayKey) => {
+  const set = dates || new Set();
+  const end = parseLocalKey(todayKey);
+  const keys = [...set].sort();
+  let start = end;
+  if (keys.length && keys[0] <= todayKey) start = parseLocalKey(keys[0]);
+  const days = [];
+  const cursor = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const endMs = new Date(end.getFullYear(), end.getMonth(), end.getDate()).getTime();
+  while (cursor.getTime() <= endMs) {
+    days.push(new Date(cursor));
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return days;
+};
+
+const computeStreak = (dates, todayKey) => {
+  const set = dates || new Set();
+  let streak = 0;
+  const cursor = parseLocalKey(todayKey);
+  while (set.has(format(cursor, 'yyyy-MM-dd'))) {
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
+};
+
+const computeRate = (dates, todayKey) => {
+  const set = dates || new Set();
+  const days = historyDays(set, todayKey);
+  if (!days.length) return 0;
+  let count = 0;
+  for (const day of days) {
+    if (set.has(format(day, 'yyyy-MM-dd'))) count += 1;
+  }
+  return Math.round((count / days.length) * 100);
+};
+
+const datesFromLogs = (habit) => {
+  const set = new Set();
+  for (const log of habit.logs || []) {
+    if (log.completed && log.date) set.add(new Date(log.date).toISOString().split('T')[0]);
+  }
+  return set;
+};
+
 const TABS = ['active', 'archived'];
 
 export default function Habits() {
@@ -60,7 +117,7 @@ export default function Habits() {
 
   const fetchCompletions = useCallback(async () => {
     try {
-      const data = await api.get('/habits/completions', { days: '30', today: localDateKey() });
+      const data = await api.get('/habits/completions', { today: localDateKey() });
       setCompletions(data.completions || {});
     } catch {
       setCompletions({});
@@ -73,7 +130,19 @@ export default function Habits() {
   }, [fetchHabits, fetchCompletions]);
 
   const today = new Date();
-  const last30Days = Array.from({ length: 30 }, (_, i) => subDays(today, 29 - i));
+
+  const datesByHabit = useMemo(() => {
+    const map = {};
+    for (const key of Object.keys(completions)) {
+      const idx = key.lastIndexOf(':');
+      if (idx === -1) continue;
+      const habitId = key.slice(0, idx);
+      const day = key.slice(idx + 1);
+      if (!map[habitId]) map[habitId] = new Set();
+      map[habitId].add(day);
+    }
+    return map;
+  }, [completions]);
 
   const toggleCompletion = async (habitId, date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -95,44 +164,6 @@ export default function Habits() {
     } catch {
       toast.error('Failed to update habit');
     }
-  };
-
-  const getStreak = (habitId) => {
-    let streak = 0;
-    for (let i = last30Days.length - 1; i >= 0; i--) {
-      const key = `${habitId}:${format(last30Days[i], 'yyyy-MM-dd')}`;
-      if (completions[key]) streak++;
-      else break;
-    }
-    return streak;
-  };
-
-  const getCompletionRate = (habitId) => {
-    let count = 0;
-    for (const day of last30Days) {
-      const key = `${habitId}:${format(day, 'yyyy-MM-dd')}`;
-      if (completions[key]) count++;
-    }
-    return Math.round((count / 30) * 100);
-  };
-
-  const getCompletionRateFromLogs = (habit) => {
-    const doneKeys = new Set(
-      (habit.logs || [])
-        .filter((l) => l.completed && l.date)
-        .map((l) => new Date(l.date).toISOString().split('T')[0])
-    );
-    let count = 0;
-    for (const day of last30Days) {
-      if (doneKeys.has(format(day, 'yyyy-MM-dd'))) count++;
-    }
-    return Math.round((count / 30) * 100);
-  };
-
-  const archivedDoneFor = (habit, dayKey) => {
-    return (habit.logs || []).some(
-      (l) => l.completed && new Date(l.date).toISOString().split('T')[0] === dayKey
-    );
   };
 
   const handleCreate = async () => {
@@ -200,7 +231,7 @@ export default function Habits() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Habits</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -258,9 +289,11 @@ export default function Habits() {
       <div className="space-y-4">
         {visibleHabits.map((habit) => {
           const isArchivedView = tab === 'archived';
-          const isCompletedToday = completions[`${habit._id}:${localDateKey()}`];
-          const streak = isArchivedView ? (habit.currentStreak || 0) : getStreak(habit._id);
-          const rate = isArchivedView ? getCompletionRateFromLogs(habit) : getCompletionRate(habit._id);
+          const habitDates = isArchivedView ? datesFromLogs(habit) : (datesByHabit[habit._id] || new Set());
+          const isCompletedToday = habitDates.has(localDateKey());
+          const streak = isArchivedView ? (habit.currentStreak || 0) : computeStreak(habitDates, localDateKey());
+          const rate = computeRate(habitDates, localDateKey());
+          const history = historyDays(habitDates, localDateKey());
           const iconIdx = HABIT_ICON_NAMES.indexOf(habit.icon);
           const IconComp = iconIdx >= 0 ? HABIT_ICONS[iconIdx] : Repeat;
 
@@ -287,8 +320,8 @@ export default function Habits() {
                 </button>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{habit.name}</h3>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 break-words">{habit.name}</h3>
                     <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 capitalize">
                       {habit.frequency || 'daily'}
                     </span>
@@ -299,7 +332,7 @@ export default function Habits() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-4 mb-3">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3">
                     <div className="flex items-center gap-1 text-xs">
                       <Flame className={clsx('w-3.5 h-3.5', streak > 0 ? 'text-orange-500' : 'text-gray-300 dark:text-gray-600')} />
                       <span className={clsx('font-semibold', streak > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-gray-400')}>{streak}</span>
@@ -311,17 +344,17 @@ export default function Habits() {
                       <span className="text-gray-400">rate</span>
                     </div>
                     {isArchivedView ? (
-                      <div className="ml-auto flex items-center gap-1">
+                      <div className="w-full sm:w-auto flex items-center gap-1 flex-wrap justify-end sm:ml-auto">
                         <button
                           onClick={() => restoreHabit(habit._id)}
-                          className="inline-flex items-center gap-1 p-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1 p-2 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors whitespace-nowrap"
                           title="Restore"
                         >
                           <RefreshCcw className="w-3.5 h-3.5" /> Restore
                         </button>
                         <button
                           onClick={() => setDeleteTarget(habit)}
-                          className="inline-flex items-center gap-1 p-1.5 text-xs font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                          className="inline-flex items-center gap-1 p-2 text-xs font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors whitespace-nowrap"
                           title="Delete permanently"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -330,7 +363,7 @@ export default function Habits() {
                     ) : (
                       <button
                         onClick={() => archiveHabit(habit._id)}
-                        className="ml-auto p-1 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                        className="ml-auto p-2 text-gray-400 transition-colors hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                         title="Archive"
                       >
                         <Archive className="w-3.5 h-3.5" />
@@ -339,10 +372,10 @@ export default function Habits() {
                   </div>
 
                   <div className="flex gap-[3px] overflow-x-auto min-w-0 pb-0.5 -mx-1 px-1">
-                    {last30Days.map((day) => {
+                    {history.map((day) => {
                       const dayKey = format(day, 'yyyy-MM-dd');
                       const key = `${habit._id}:${dayKey}`;
-                      const done = isArchivedView ? archivedDoneFor(habit, dayKey) : completions[key];
+                      const done = habitDates.has(dayKey);
                       const isToday = isSameDay(day, today);
                       return (
                         <button
@@ -448,8 +481,8 @@ export default function Habits() {
             <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center mt-0.5">
               <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
-            <div>
-              <p className="text-sm text-gray-700 dark:text-gray-300">
+            <div className="min-w-0">
+              <p className="text-sm text-gray-700 dark:text-gray-300 break-words">
                 Are you sure you want to permanently delete <span className="font-semibold text-gray-900 dark:text-gray-100">{deleteTarget?.name}</span>?
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -458,7 +491,7 @@ export default function Habits() {
             </div>
           </div>
         </div>
-        <div className="flex justify-end gap-2 mt-6">
+        <div className="flex flex-wrap justify-end gap-2 mt-6">
           <button onClick={() => setDeleteTarget(null)} disabled={deleting} className="btn-secondary btn-sm">Cancel</button>
           <button
             onClick={permanentlyDeleteHabit}

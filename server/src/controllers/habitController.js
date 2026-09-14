@@ -163,15 +163,19 @@ export const logHabit = async (req, res) => {
 };
 
 // GET /api/habits/completions?days=N&today=YYYY-MM-DD
-// Returns a map of `${habitId}:${YYYY-MM-DD}` -> true for the window of the
-// user's `days` ending at `today`. `today` is the client's calendar date so
-// users ahead of or behind UTC never lose their current-day completion.
+// Returns a map of `${habitId}:${YYYY-MM-DD}` -> true for the user's history.
+// When `days` is omitted the full (unbounded) completion history is returned so
+// no age-based limit is ever imposed on habit check-ins. When `days` is a
+// positive number the result is restricted to that rolling window ending at
+// `today`. `today` is the client's calendar date so users ahead of or behind
+// UTC never lose their current-day completion.
 export const getHabitCompletions = async (req, res) => {
   try {
-    const daysNum = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 365);
+    const daysNum = parseInt(req.query.days, 10);
+    const hasWindow = Number.isInteger(daysNum) && daysNum > 0;
     const today = todayKeyOf(req);
     const windowEnd = parseDateKey(addDaysKey(today, 1));
-    const windowStart = parseDateKey(addDaysKey(today, -(daysNum - 1)));
+    const windowStart = hasWindow ? parseDateKey(addDaysKey(today, -(daysNum - 1))) : null;
 
     const habits = await Habit.find({ userId: req.userId, isArchived: false }).select('logs');
     const completions = {};
@@ -179,7 +183,7 @@ export const getHabitCompletions = async (req, res) => {
       for (const log of habit.logs) {
         const d = log.date instanceof Date ? log.date : new Date(log.date);
         if (!log.completed || Number.isNaN(d.getTime())) continue;
-        if (d >= windowStart && d < windowEnd) {
+        if (!hasWindow || (d >= windowStart && d < windowEnd)) {
           completions[`${habit._id}:${dateKey(log.date)}`] = true;
         }
       }
@@ -247,21 +251,43 @@ export const removeHabitCompletion = async (req, res) => {
   }
 };
 
-// GET /api/habits/:id/stats?days=30&today=YYYY-MM-DD
+// GET /api/habits/:id/stats?days=N&today=YYYY-MM-DD
+// Returns stats for the habit. `days` is optional: when provided the rate and
+// monthly grid cover that rolling window; when omitted the habit's full history
+// (from its first completion through today) is used so nothing older than any
+// fixed window is ever hidden.
 export const getHabitStats = async (req, res) => {
   try {
     const habit = await Habit.findOne({ _id: req.params.id, userId: req.userId });
     if (!habit) return res.status(404).json({ error: 'Habit not found' });
 
-    const daysNum = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 365);
+    const daysNum = parseInt(req.query.days, 10);
+    const hasWindow = Number.isInteger(daysNum) && daysNum > 0;
     const today = req.query.today ? todayKeyOf(req) : utcTodayKey();
     const windowEnd = parseDateKey(addDaysKey(today, 1));
-    const windowStart = parseDateKey(addDaysKey(today, -(daysNum - 1)));
+
+    let windowStart;
+    let rangeDays;
+    if (hasWindow) {
+      windowStart = parseDateKey(addDaysKey(today, -(daysNum - 1)));
+      rangeDays = daysNum;
+    } else {
+      let earliest = null;
+      for (const log of habit.logs) {
+        const d = log.date instanceof Date ? log.date : new Date(log.date);
+        if (log.completed && !Number.isNaN(d.getTime()) && (!earliest || d < earliest)) {
+          earliest = d;
+        }
+      }
+      windowStart = earliest ? parseDateKey(dateKey(earliest)) : parseDateKey(addDaysKey(today, 0));
+      rangeDays = Math.max(1, Math.round((windowEnd - windowStart) / DAY_MS));
+    }
 
     const keys = new Set();
     for (const log of habit.logs) {
       const d = log.date instanceof Date ? log.date : new Date(log.date);
-      if (log.completed && d >= windowStart && d < windowEnd) {
+      if (!log.completed || Number.isNaN(d.getTime())) continue;
+      if (d >= windowStart && d < windowEnd) {
         keys.add(dateKey(log.date));
       }
     }
@@ -269,10 +295,10 @@ export const getHabitStats = async (req, res) => {
     recomputeStreaks(habit, today);
 
     const completedDays = keys.size;
-    const completionRate = Math.round((completedDays / daysNum) * 100);
+    const completionRate = Math.round((completedDays / rangeDays) * 100);
 
     const monthlyData = [];
-    for (let i = daysNum - 1; i >= 0; i--) {
+    for (let i = rangeDays - 1; i >= 0; i--) {
       const dayKey = addDaysKey(today, -i);
       monthlyData.push({ date: dayKey, completed: keys.has(dayKey) });
     }

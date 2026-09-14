@@ -519,12 +519,14 @@ async function main() {
   console.log(`Created ${allTodos.length} todos`);
 
   // --- 6. Habits ------------------------------------------------------------
-  // Deterministic completion generation over the last 30 days.
-  const buildHabit = (name, icon, color, frequency, targetDays, isDoneFn, order) => {
+  // Deterministic completion generation over the last 60 days so the demo shows
+  // history and streaks older than a 30-day window (habits are meant to run
+  // indefinitely).
+  const buildHabit = (name, icon, color, frequency, targetDays, isDoneFn, order, isArchived = false) => {
     const logs = [];
     let streak = 0;
     let longest = 0;
-    for (let i = 29; i >= 0; i--) {
+    for (let i = 59; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       date.setHours(8, 0, 0, 0);
@@ -549,7 +551,7 @@ async function main() {
       currentStreak: logs[0]?.completed ? streak : 0,
       longestStreak: longest,
       order,
-      isArchived: false,
+      isArchived,
     };
   };
 
@@ -560,11 +562,12 @@ async function main() {
     { name: 'Meditation', icon: '🧘', color: '#8b5cf6', frequency: 'daily', targetDays: [0, 1, 2, 3, 4, 5, 6], fn: (d) => d.getDay() % 7 !== 5 },
     { name: 'Meal prep for the week', icon: '🍳', color: '#f59e0b', frequency: 'weekly', targetDays: [0], fn: (d) => d.getDay() === 0 && d.getDate() % 3 !== 2 },
     { name: 'Stretch before bed', icon: '🧊', color: '#ec4899', frequency: 'daily', targetDays: [0, 1, 2, 3, 4, 5, 6], fn: () => false },
+    { name: 'Old journaling habit', icon: '📔', color: '#64748b', frequency: 'daily', targetDays: [0, 1, 2, 3, 4, 5, 6], fn: (d) => d.getDay() !== 6, order: 6, isArchived: true },
   ];
 
   const habits = [];
   habitDefs.forEach((h, i) => {
-    habits.push(buildHabit(h.name, h.icon, h.color, h.frequency, h.targetDays, h.fn, i));
+    habits.push(buildHabit(h.name, h.icon, h.color, h.frequency, h.targetDays, h.fn, i, !!h.isArchived));
   });
   await save(Habit, habits);
   console.log(`Created ${habits.length} habits`);
