@@ -41,6 +41,7 @@ const COLUMNS = [
 
 function mapTodoStatus(todo) {
   if (todo.completed) return 'completed';
+  if (todo.status === 'planned' || todo.status === 'waiting' || todo.status === 'blocked') return 'inbox';
   if (todo.status) return todo.status;
   if (todo.list === 'inbox') return 'inbox';
   return 'inbox';
@@ -140,7 +141,7 @@ function KanbanColumn({ column, todos, _onAddTask, onOpenTask }) {
   };
 
   return (
-    <div className="flex flex-col w-[300px] min-w-[300px] max-w-[300px] flex-shrink-0 max-h-[calc(100vh-13rem)]">
+    <div className="flex flex-col w-[300px] min-w-[300px] max-w-[300px] flex-shrink-0 max-h-[calc(100vh-13rem)] min-h-[160px] md:min-h-[240px]">
       <div className="flex items-center gap-2 px-3 py-2 mb-2 md:mb-3">
         <div className={clsx('w-2 h-2 rounded-full', column.color)} />
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">{column.label}</h3>
@@ -152,7 +153,7 @@ function KanbanColumn({ column, todos, _onAddTask, onOpenTask }) {
       <div
         ref={setNodeRef}
         className={clsx(
-          'flex-1 space-y-2 min-h-[120px] md:min-h-[200px] p-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 overflow-y-auto',
+          'flex-1 min-h-0 space-y-2 p-1 rounded-xl bg-gray-50/50 dark:bg-gray-800/30 overflow-y-auto',
           isOver && 'ring-2 ring-blue-400/60 bg-blue-50/60 dark:bg-blue-500/5'
         )}
       >

@@ -32,6 +32,7 @@ export default function Projects() {
   const [editName, setEditName] = useState('');
   const [editIcon, setEditIcon] = useState(0);
   const [editColor, setEditColor] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
 
   useEffect(() => {
     fetchProjects().finally(() => setLoading(false));
@@ -85,6 +86,12 @@ export default function Projects() {
   };
 
   const handleDelete = async (id) => {
+    setShowDeleteConfirm(id);
+  };
+
+  const confirmDelete = async () => {
+    const id = showDeleteConfirm;
+    setShowDeleteConfirm(null);
     try {
       await deleteProject(id);
       toast.success('Project deleted');
@@ -219,6 +226,14 @@ export default function Projects() {
           );
         })}
       </div>
+
+      <Modal isOpen={!!showDeleteConfirm} onClose={() => setShowDeleteConfirm(null)} title="Delete Project" size="sm">
+        <p className="text-sm text-gray-600 dark:text-gray-400">This will permanently delete this project and remove it from all associated tasks. This cannot be undone.</p>
+        <div className="flex justify-end gap-2 mt-6">
+          <button onClick={() => setShowDeleteConfirm(null)} className="btn-secondary btn-sm">Cancel</button>
+          <button onClick={confirmDelete} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors">Delete</button>
+        </div>
+      </Modal>
 
       <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title="New Project" size="sm">
         <div className="space-y-5">

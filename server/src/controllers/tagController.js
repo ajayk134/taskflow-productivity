@@ -4,7 +4,7 @@ import Todo from '../models/Todo.js';
 export const createTag = async (req, res) => {
   try {
     const { name, color } = req.body;
-    if (!name) return res.status(400).json({ error: 'Name is required' });
+    if (!name || !String(name).trim()) return res.status(400).json({ error: 'Name is required' });
 
     const tag = await Tag.findOneAndUpdate(
       { userId: req.userId, name: name.toLowerCase().trim() },
@@ -31,21 +31,24 @@ export const getTags = async (req, res) => {
 
 export const updateTag = async (req, res) => {
   try {
-    const tag = await Tag.findOneAndUpdate(
-      { _id: req.params.id, userId: req.userId },
-      req.body,
-      { new: true }
-    );
+    const tag = await Tag.findOne({ _id: req.params.id, userId: req.userId });
     if (!tag) return res.status(404).json({ error: 'Tag not found' });
 
-    // Update tag name in all todos if name changed
-    if (req.body.name) {
-      await Todo.updateMany(
-        { userId: req.userId, tags: tag.name },
-        { $set: { 'tags.$': req.body.name.toLowerCase().trim() } }
-      );
-    }
+    const oldName = tag.name;
+    const newName = req.body.name ? req.body.name.toLowerCase().trim() : undefined;
+    const newColor = req.body.color;
 
+    if (newName && newName !== oldName) {
+      // Update tag name in all todos first
+      await Todo.updateMany(
+        { userId: req.userId, tags: oldName },
+        { $set: { 'tags.$': newName } }
+      );
+      tag.name = newName;
+    }
+    if (newColor !== undefined) tag.color = newColor;
+
+    await tag.save();
     res.json({ tag });
   } catch (error) {
     res.status(500).json({ error: error.message });

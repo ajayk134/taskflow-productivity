@@ -1,5 +1,16 @@
 import Todo from '../models/Todo.js';
 
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const sanitizeCSVField = (val) => {
+  if (val == null) return '';
+  const str = String(val);
+  // Prefix with single-quote to neutralize CSV formula injection
+  if (/^[=+\-@\t\r]/.test(str)) return `'${str.replace(/"/g, '""')}`;
+  if (str.includes(',') || str.includes('"') || str.includes('\n')) return `"${str.replace(/"/g, '""')}"`;
+  return str;
+};
+
 export const searchTodos = async (req, res) => {
   try {
     const { q, priority, status, due, tag, project, category } = req.query;
@@ -40,16 +51,17 @@ export const searchTodos = async (req, res) => {
               query.dueDate = { $gte: today, $lte: endWeek };
             }
           } else if (key === 'tag') {
-            query.tags = match[1].toLowerCase();
+            query.tags = { $in: [match[1].toLowerCase()] };
           }
         }
       }
 
       if (searchText) {
+        const safe = escapeRegex(searchText);
         query.$or = [
-          { title: { $regex: searchText, $options: 'i' } },
-          { description: { $regex: searchText, $options: 'i' } },
-          { notes: { $regex: searchText, $options: 'i' } }
+          { title: { $regex: safe, $options: 'i' } },
+          { description: { $regex: safe, $options: 'i' } },
+          { notes: { $regex: safe, $options: 'i' } }
         ];
       }
     }
@@ -109,13 +121,13 @@ export const exportCSV = async (req, res) => {
 
     const headers = ['Title', 'Status', 'Priority', 'Due Date', 'Project', 'Tags', 'Description', 'Created', 'Completed'];
     const rows = todos.map(t => [
-      `"${(t.title || '').replace(/"/g, '""')}"`,
-      t.status,
+      sanitizeCSVField(t.title),
+      sanitizeCSVField(t.status),
       t.priority,
       t.dueDate ? new Date(t.dueDate).toISOString().split('T')[0] : '',
-      t.projectId || '',
-      (t.tags || []).join('; '),
-      `"${(t.description || '').replace(/"/g, '""')}"`,
+      sanitizeCSVField(t.projectId || ''),
+      sanitizeCSVField((t.tags || []).join('; ')),
+      sanitizeCSVField(t.description),
       new Date(t.createdAt).toISOString().split('T')[0],
       t.completedAt ? new Date(t.completedAt).toISOString().split('T')[0] : ''
     ]);
@@ -132,40 +144,53 @@ export const exportCSV = async (req, res) => {
 export const importData = async (req, res) => {
   try {
     const { data, overwrite } = req.body;
-    if (!data) return res.status(400).json({ error: 'No data provided' });
+    if (!data || typeof data !== 'object') return res.status(400).json({ error: 'No data provided' });
 
     const userId = req.userId;
     const results = { todos: 0, projects: 0, tags: 0, habits: 0, goals: 0 };
 
-    if (data.todos) {
+    const safeFields = (obj, fields) => {
+      const out = {};
+      for (const key of fields) {
+        if (key in obj) out[key] = obj[key];
+      }
+      return out;
+    };
+
+    if (data.todos && Array.isArray(data.todos)) {
       for (const todo of data.todos) {
-        todo.userId = userId;
-        delete todo._id;
-        delete todo.__v;
-        delete todo.createdAt;
-        delete todo.updatedAt;
-        await Todo.create(todo);
+        const todoData = safeFields(todo, [
+          'title', 'description', 'status', 'priority', 'tags', 'dueDate', 'dueTime',
+          'projectId', 'category', 'isImportant', 'isMyDay', 'isFavorite',
+          'subtasks', 'checklist', 'recurrence', 'notes', 'estimatedDuration',
+          'order', 'isPinned', 'completedAt'
+        ]);
+        todoData.userId = userId;
+        if (!todoData.title) continue;
+        await Todo.create(todoData);
         results.todos++;
       }
     }
 
-    if (data.projects) {
+    if (data.projects && Array.isArray(data.projects)) {
       for (const project of data.projects) {
-        project.userId = userId;
-        delete project._id;
-        delete project.__v;
-        await (await import('../models/Project.js')).default.create(project);
+        const projectData = safeFields(project, [
+          'name', 'description', 'icon', 'color', 'status', 'startDate', 'targetDate',
+          'sections', 'isFavorite', 'order'
+        ]);
+        projectData.userId = userId;
+        if (!projectData.name) continue;
+        await (await import('../models/Project.js')).default.create(projectData);
         results.projects++;
       }
     }
 
-    if (data.tags) {
+    if (data.tags && Array.isArray(data.tags)) {
       for (const tag of data.tags) {
-        tag.userId = userId;
-        delete tag._id;
+        if (!tag.name) continue;
         await (await import('../models/Tag.js')).default.findOneAndUpdate(
-          { userId, name: tag.name },
-          { $setOnInsert: tag },
+          { userId, name: String(tag.name).toLowerCase().trim() },
+          { $setOnInsert: { userId, name: String(tag.name).toLowerCase().trim(), color: tag.color || '#6366f1' } },
           { upsert: true }
         );
         results.tags++;

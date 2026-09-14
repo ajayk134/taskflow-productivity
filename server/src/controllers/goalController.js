@@ -1,9 +1,20 @@
 import Goal from '../models/Goal.js';
 import Activity from '../models/Activity.js';
 
+const pick = (obj, keys) => {
+  const out = {};
+  for (const key of keys) {
+    if (key in obj) out[key] = obj[key];
+  }
+  return out;
+};
+
+const GOAL_FIELDS = ['title', 'description', 'color', 'icon', 'targetDate', 'progress', 'status', 'category'];
+const MILESTONE_FIELDS = ['name', 'targetDate', 'completed', 'order', 'description'];
+
 export const createGoal = async (req, res) => {
   try {
-    const goal = await Goal.create({ ...req.body, userId: req.userId });
+    const goal = await Goal.create({ ...pick(req.body, GOAL_FIELDS), userId: req.userId });
     await Activity.create({ userId: req.userId, action: 'goal-created', entityType: 'goal', entityId: goal._id, entityTitle: goal.title });
     res.status(201).json({ goal });
   } catch (error) {
@@ -28,8 +39,8 @@ export const updateGoal = async (req, res) => {
   try {
     const goal = await Goal.findOneAndUpdate(
       { _id: req.params.id, userId: req.userId },
-      req.body,
-      { new: true }
+      pick(req.body, GOAL_FIELDS),
+      { new: true, runValidators: true }
     );
     if (!goal) return res.status(404).json({ error: 'Goal not found' });
     await Activity.create({ userId: req.userId, action: 'goal-updated', entityType: 'goal', entityId: goal._id, entityTitle: goal.title });
@@ -58,7 +69,12 @@ export const addMilestone = async (req, res) => {
     const goal = await Goal.findOne({ _id: req.params.id, userId: req.userId });
     if (!goal) return res.status(404).json({ error: 'Goal not found' });
 
-    goal.milestones.push(req.body);
+    const milestoneData = pick(req.body || {}, MILESTONE_FIELDS);
+    if (!milestoneData.name) {
+      return res.status(400).json({ error: 'Milestone name is required' });
+    }
+    milestoneData.order = goal.milestones.length;
+    goal.milestones.push(milestoneData);
     await goal.save();
     res.json({ goal });
   } catch (error) {
@@ -74,7 +90,11 @@ export const updateMilestone = async (req, res) => {
     const milestone = goal.milestones.id(req.params.milestoneId);
     if (!milestone) return res.status(404).json({ error: 'Milestone not found' });
 
-    Object.assign(milestone, req.body);
+    if (req.body && req.body._id !== undefined) {
+      return res.status(400).json({ error: 'Cannot change milestone id' });
+    }
+    const milestoneData = pick(req.body || {}, MILESTONE_FIELDS);
+    Object.assign(milestone, milestoneData);
     if (req.body.completed && !milestone.completedAt) {
       milestone.completedAt = new Date();
     }

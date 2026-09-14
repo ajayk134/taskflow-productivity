@@ -27,6 +27,7 @@ export default function Notes() {
   const [noteTitle, setNoteTitle] = useState('');
   const [noteContent, setNoteContent] = useState('');
   const [noteProject, setNoteProject] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const { projects, fetchProjects } = useProjectStore();
 
   const projectNameFor = (id) => {
@@ -107,6 +108,12 @@ export default function Notes() {
   };
 
   const deleteNote = async (id) => {
+    setShowDeleteConfirm(id);
+  };
+
+  const confirmDeleteNote = async () => {
+    const id = showDeleteConfirm;
+    setShowDeleteConfirm(null);
     try {
       await api.delete(`/notes/${id}`);
       toast.success('Note deleted');
@@ -235,6 +242,14 @@ export default function Notes() {
           ))}
         </div>
       )}
+
+      <Modal isOpen={!!showDeleteConfirm} onClose={() => setShowDeleteConfirm(null)} title="Delete Note" size="sm">
+        <p className="text-sm text-gray-600 dark:text-gray-400">This will permanently delete this note. This cannot be undone.</p>
+        <div className="flex justify-end gap-2 mt-6">
+          <button onClick={() => setShowDeleteConfirm(null)} className="btn-secondary btn-sm">Cancel</button>
+          <button onClick={confirmDeleteNote} className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors">Delete</button>
+        </div>
+      </Modal>
 
       <Modal isOpen={showEditor} onClose={() => setShowEditor(false)} title={editingNote ? 'Edit Note' : 'New Note'} size="lg">
         <div className="space-y-4">

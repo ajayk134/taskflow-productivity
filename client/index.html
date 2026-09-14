@@ -9,6 +9,27 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <title>Donezo - Productivity Platform</title>
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('taskflow_theme') || 'system';
+          var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+
+          var accent = localStorage.getItem('taskflow_accent');
+          var base = /^#([0-9a-f]{6})$/i.test(accent || '') ? accent : '#3b82f6';
+          var rgb = base.slice(1).match(/.{2}/g).map(function (h) { return parseInt(h, 16); });
+          var shade = function (f) {
+            return '#' + rgb.map(function (c) { return Math.round(Math.min(255, c * f)).toString(16).padStart(2, '0'); }).join('');
+          };
+          var root = document.documentElement.style;
+          root.setProperty('--color-brand-500', base);
+          root.setProperty('--color-brand-600', base);
+          root.setProperty('--color-brand-700', shade(0.7));
+          root.setProperty('--color-brand-800', shade(0.5));
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="antialiased">
     <div id="root"></div>

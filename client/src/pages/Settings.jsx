@@ -55,7 +55,7 @@ export default function Settings() {
   const [accentColor, setAccentColor] = useState(() => localStorage.getItem('taskflow_accent') || '#3b82f6');
   const [defaultView, setDefaultView] = useState(() => localStorage.getItem('taskflow_defaultView') || 'inbox');
   const [weekStart, setWeekStart] = useState(() => localStorage.getItem('taskflow_weekStart') || 'monday');
-  const [timezone, setTimezone] = useState(() => Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [timezone, setTimezone] = useState(() => localStorage.getItem('taskflow_timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [notifications, setNotifications] = useState(() => {
     const stored = localStorage.getItem('taskflow_notifications');
     return stored ? JSON.parse(stored) : { email: true, push: false, daily: true, weekly: false };
@@ -78,6 +78,16 @@ export default function Settings() {
   const updateWeekStart = (val) => {
     setWeekStart(val);
     localStorage.setItem('taskflow_weekStart', val);
+  };
+
+  const updateTimezone = async (tz) => {
+    setTimezone(tz);
+    localStorage.setItem('taskflow_timezone', tz);
+    try {
+      await api.put('/settings', { timezone: tz });
+    } catch {
+      // non-critical - timezone preference is saved locally
+    }
   };
 
   const updateNotifications = (key, val) => {
@@ -224,7 +234,7 @@ export default function Settings() {
         <SettingRow label="Timezone" description="Used for due dates and scheduling">
           <select
             value={timezone}
-            onChange={(e) => setTimezone(e.target.value)}
+            onChange={(e) => updateTimezone(e.target.value)}
             className="input text-sm max-w-[200px]"
           >
             {Intl.supportedValuesOf('timeZone').map((tz) => (

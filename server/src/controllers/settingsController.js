@@ -22,9 +22,30 @@ export const getSettings = async (req, res) => {
   }
 };
 
+const ALLOWED_SETTINGS = [
+  'theme', 'accentColor', 'timezone', 'dateFormat', 'defaultView', 'weekStartsOn', 'notifications', 'name'
+];
+
 export const updateSettings = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(req.userId, req.body, { new: true });
+    const updatable = {};
+    for (const key of ALLOWED_SETTINGS) {
+      if (key in req.body) updatable[key] = req.body[key];
+    }
+    if (updatable.notifications !== undefined && (typeof updatable.notifications !== 'object' || updatable.notifications === null)) {
+      return res.status(400).json({ error: 'Invalid notifications payload' });
+    }
+    if (updatable.theme !== undefined && !['light', 'dark', 'system'].includes(updatable.theme)) {
+      return res.status(400).json({ error: 'Invalid theme' });
+    }
+    if (updatable.defaultView !== undefined && !['inbox', 'my-day', 'today', 'upcoming', 'kanban', 'calendar', 'list', 'compact', 'timeline'].includes(updatable.defaultView)) {
+      return res.status(400).json({ error: 'Invalid default view' });
+    }
+    if (updatable.weekStartsOn !== undefined && ![0, 1].includes(Number(updatable.weekStartsOn))) {
+      return res.status(400).json({ error: 'Invalid week start' });
+    }
+
+    const user = await User.findByIdAndUpdate(req.userId, updatable, { new: true, runValidators: true });
     res.json({
       settings: {
         theme: user.theme,

@@ -8,8 +8,6 @@ import BulkActions from '../components/todo/BulkActions';
 import { Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
 import {
   format,
-  isThisWeek,
-  differenceInCalendarWeeks,
   isToday,
   parseISO,
   startOfWeek,
@@ -27,40 +25,6 @@ export default function Upcoming() {
     fetchTodos({});
   }, [fetchTodos]);
 
-  const thisWeekTodos = useMemo(() => {
-    return todos.filter(
-      (t) =>
-        t.dueDate &&
-        isThisWeek(parseISO(t.dueDate), { weekStartsOn: 1 }) &&
-        !isToday(parseISO(t.dueDate)) &&
-        t.status !== 'completed' &&
-        t.status !== 'trashed'
-    );
-  }, [todos]);
-
-  const nextWeekTodos = useMemo(() => {
-    return todos.filter(
-      (t) =>
-        t.dueDate &&
-        differenceInCalendarWeeks(parseISO(t.dueDate), new Date(), {
-          weekStartsOn: 1,
-        }) === 1 &&
-        t.status !== 'completed' &&
-        t.status !== 'trashed'
-    );
-  }, [todos]);
-
-  const laterTodos = useMemo(() => {
-    const nextWeekEnd = endOfWeek(addWeeks(new Date(), 1), { weekStartsOn: 1 });
-    return todos.filter(
-      (t) =>
-        t.dueDate &&
-        parseISO(t.dueDate) > nextWeekEnd &&
-        t.status !== 'completed' &&
-        t.status !== 'trashed'
-    );
-  }, [todos]);
-
   const todayTodos = useMemo(
     () =>
       todos.filter(
@@ -72,6 +36,44 @@ export default function Upcoming() {
       ),
     [todos]
   );
+
+  const thisWeekTodos = useMemo(() => {
+    const start = addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), weekOffset);
+    const end = endOfWeek(start, { weekStartsOn: 1 });
+    return todos.filter(
+      (t) =>
+        t.dueDate &&
+        parseISO(t.dueDate) >= start &&
+        parseISO(t.dueDate) <= end &&
+        !isToday(parseISO(t.dueDate)) &&
+        t.status !== 'completed' &&
+        t.status !== 'trashed'
+    );
+  }, [todos, weekOffset]);
+
+  const nextWeekTodos = useMemo(() => {
+    const nextStart = addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), weekOffset + 1);
+    const nextEnd = endOfWeek(nextStart, { weekStartsOn: 1 });
+    return todos.filter(
+      (t) =>
+        t.dueDate &&
+        parseISO(t.dueDate) >= nextStart &&
+        parseISO(t.dueDate) <= nextEnd &&
+        t.status !== 'completed' &&
+        t.status !== 'trashed'
+    );
+  }, [todos, weekOffset]);
+
+  const laterTodos = useMemo(() => {
+    const nextWeekEnd = endOfWeek(addWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), weekOffset + 2), { weekStartsOn: 1 });
+    return todos.filter(
+      (t) =>
+        t.dueDate &&
+        parseISO(t.dueDate) > nextWeekEnd &&
+        t.status !== 'completed' &&
+        t.status !== 'trashed'
+    );
+  }, [todos, weekOffset]);
 
   const Section = ({ title, tasks, icon: Icon, color }) => (
     <div>

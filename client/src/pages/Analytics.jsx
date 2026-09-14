@@ -192,10 +192,10 @@ export default function Analytics() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard icon={CheckCircle2} label="Completed Today" value={stats.completedToday} color="bg-green-500" change={12} />
-        <StatCard icon={Calendar} label="This Week" value={stats.completedThisWeek} color="bg-blue-500" change={8} />
-        <StatCard icon={TrendingUp} label="This Month" value={stats.completedThisMonth} color="bg-violet-500" change={-3} />
-        <StatCard icon={Target} label="Completion Rate" value={`${stats.completionRate}%`} color="bg-amber-500" change={5} />
+        <StatCard icon={CheckCircle2} label="Completed Today" value={stats.completedToday} color="bg-green-500" />
+        <StatCard icon={Calendar} label="This Week" value={stats.completedThisWeek} color="bg-blue-500" />
+        <StatCard icon={TrendingUp} label="This Month" value={stats.completedThisMonth} color="bg-violet-500" />
+        <StatCard icon={Target} label="Completion Rate" value={`${stats.completionRate}%`} color="bg-amber-500" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

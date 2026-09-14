@@ -70,12 +70,23 @@ export const getProject = async (req, res) => {
   }
 };
 
+const pick = (obj, keys) => {
+  const out = {};
+  for (const key of keys) {
+    if (key in obj) out[key] = obj[key];
+  }
+  return out;
+};
+
+const PROJECT_FIELDS = ['name', 'description', 'icon', 'color', 'status', 'startDate', 'targetDate', 'sections', 'isFavorite', 'order'];
+const SECTION_FIELDS = ['name', 'order', 'color'];
+
 export const updateProject = async (req, res) => {
   try {
     const project = await Project.findOneAndUpdate(
       { _id: req.params.id, userId: req.userId },
-      req.body,
-      { new: true }
+      pick(req.body, PROJECT_FIELDS),
+      { new: true, runValidators: true }
     );
     if (!project) return res.status(404).json({ error: 'Project not found' });
     await Activity.create({ userId: req.userId, action: 'project-updated', entityType: 'project', entityId: project._id, entityTitle: project.name });
@@ -91,8 +102,11 @@ export const deleteProject = async (req, res) => {
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
     await Project.findByIdAndUpdate(req.params.id, { deletedAt: new Date() });
-    // Move todos to inbox
-    await Todo.updateMany({ projectId: req.params.id }, { $set: { projectId: null, status: 'inbox' } });
+    // Move todos to inbox (scoped to the user so we never touch another user's rows)
+    await Todo.updateMany(
+      { projectId: req.params.id, userId: req.userId },
+      { $set: { projectId: null, status: 'inbox', sectionId: null } }
+    );
 
     res.json({ message: 'Project deleted' });
   } catch (error) {
@@ -119,7 +133,10 @@ export const addSection = async (req, res) => {
     const project = await Project.findOne({ _id: req.params.id, userId: req.userId });
     if (!project) return res.status(404).json({ error: 'Project not found' });
 
-    project.sections.push(req.body);
+    if (!req.body || typeof req.body !== 'object' || !req.body.name) {
+      return res.status(400).json({ error: 'Section name is required' });
+    }
+    project.sections.push({ name: req.body.name, order: req.body.order ?? project.sections.length, color: req.body.color });
     await project.save();
     res.json({ project });
   } catch (error) {
@@ -135,7 +152,10 @@ export const updateSection = async (req, res) => {
     const section = project.sections.id(req.params.sectionId);
     if (!section) return res.status(404).json({ error: 'Section not found' });
 
-    Object.assign(section, req.body);
+    if (req.body && req.body._id !== undefined) {
+      return res.status(400).json({ error: 'Cannot change section id' });
+    }
+    Object.assign(section, pick(req.body || {}, SECTION_FIELDS));
     await project.save();
     res.json({ project });
   } catch (error) {

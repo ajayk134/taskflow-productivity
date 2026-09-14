@@ -37,15 +37,15 @@ export default function Modal({ isOpen, onClose, title, children, actions, size 
         if (contentRef.current && !contentRef.current.contains(e.target)) onClose();
       }}
     >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" style={{ animation: 'fadeIn 0.2s ease-out' }} />
       <div
         ref={contentRef}
         className={clsx(
           'relative w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700',
-          'animate-in zoom-in-95 fade-in duration-200',
           sizeClasses[size],
           className
         )}
+        style={{ animation: 'modalIn 0.2s ease-out' }}
       >
         {title && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">

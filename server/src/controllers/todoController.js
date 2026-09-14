@@ -13,6 +13,8 @@ const STATUS_ALIASES = {
   'in review': 'review'
 };
 
+const escapeRegex = (str) => String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const normalizeStatus = (status) => {
   if (status === undefined || status === null) return undefined;
   const normalized = String(status).toLowerCase().trim();
@@ -139,10 +141,11 @@ export const getTodos = async (req, res) => {
     if (dueBefore) query.dueDate = { ...query.dueDate, $lte: new Date(dueBefore) };
     if (dueAfter) query.dueDate = { ...query.dueDate, $gte: new Date(dueAfter) };
     if (search) {
+      const safe = escapeRegex(search);
       query.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { notes: { $regex: search, $options: 'i' } }
+        { title: { $regex: safe, $options: 'i' } },
+        { description: { $regex: safe, $options: 'i' } },
+        { notes: { $regex: safe, $options: 'i' } }
       ];
     }
 
@@ -222,7 +225,12 @@ export const updateTodo = async (req, res) => {
       }
     }
 
-    const todo = await Todo.findByIdAndUpdate(req.params.id, updates, { new: true });
+    const todo = await Todo.findOneAndUpdate(
+      { _id: req.params.id, userId: req.userId },
+      updates,
+      { new: true }
+    );
+    if (!todo) return res.status(404).json({ error: 'Todo not found' });
     if (!updates.status || updates.status === oldTodo.status) {
       await logActivity(req.userId, 'updated', 'todo', oldTodo._id, oldTodo.title);
     }
@@ -240,6 +248,14 @@ export const deleteTodo = async (req, res) => {
 
     // Soft delete
     await Todo.findByIdAndUpdate(req.params.id, { deletedAt: new Date() });
+
+    // Decrement tag counts
+    if (todo.tags?.length) {
+      for (const tagName of todo.tags) {
+        await Tag.findOneAndUpdate({ userId: req.userId, name: tagName }, { $inc: { count: -1 } });
+      }
+    }
+
     await logActivity(req.userId, 'deleted', 'todo', todo._id, todo.title);
 
     res.json({ message: 'Todo moved to trash', todo, todoId: req.params.id });
@@ -254,6 +270,14 @@ export const permanentlyDeleteTodo = async (req, res) => {
     if (!todo) return res.status(404).json({ error: 'Todo not found' });
 
     await Todo.findByIdAndDelete(req.params.id);
+
+    // Decrement tag counts
+    if (todo.tags?.length) {
+      for (const tagName of todo.tags) {
+        await Tag.findOneAndUpdate({ userId: req.userId, name: tagName }, { $inc: { count: -1 } });
+      }
+    }
+
     await logActivity(req.userId, 'permanently-deleted', 'todo', todo._id, todo.title);
 
     res.json({ message: 'Todo permanently deleted' });
@@ -268,6 +292,14 @@ export const restoreTodo = async (req, res) => {
     if (!todo) return res.status(404).json({ error: 'Todo not found' });
 
     await Todo.findByIdAndUpdate(req.params.id, { deletedAt: null });
+
+    // Increment tag counts
+    if (todo.tags?.length) {
+      for (const tagName of todo.tags) {
+        await Tag.findOneAndUpdate({ userId: req.userId, name: tagName }, { $inc: { count: 1 } }, { upsert: true });
+      }
+    }
+
     await logActivity(req.userId, 'restored', 'todo', todo._id, todo.title);
 
     res.json({ todo: await Todo.findById(req.params.id) });
@@ -344,9 +376,24 @@ export const bulkUpdateTodos = async (req, res) => {
     const { ids, updates } = req.body;
     if (!ids?.length) return res.status(400).json({ error: 'No todo IDs provided' });
 
-    const cleanUpdates = { ...updates };
-    delete cleanUpdates.userId;
-    delete cleanUpdates.completed;
+    const BULK_FIELDS = [
+      'status', 'priority', 'tags', 'projectId', 'isImportant', 'isMyDay',
+      'isFavorite', 'dueDate', 'dueTime', 'order', 'sectionId'
+    ];
+    const cleanUpdates = {};
+    for (const key of BULK_FIELDS) {
+      if (key in (updates || {})) cleanUpdates[key] = updates[key];
+    }
+    if (updates && typeof updates.completed === 'boolean') {
+      cleanUpdates.completed = updates.completed;
+      cleanUpdates.status = updates.completed ? 'completed' : 'inbox';
+      if (updates.completed) cleanUpdates.completedAt = new Date();
+      else cleanUpdates.completedAt = null;
+    }
+
+    if (!Object.keys(cleanUpdates).length) {
+      return res.status(400).json({ error: 'No valid updates provided' });
+    }
 
     if (cleanUpdates.status !== undefined) {
       const status = normalizeStatus(cleanUpdates.status);
@@ -372,10 +419,23 @@ export const bulkDeleteTodos = async (req, res) => {
     const { ids } = req.body;
     if (!ids?.length) return res.status(400).json({ error: 'No todo IDs provided' });
 
+    // Count tag decrements for soft-deleted todos
+    const affectedTodos = await Todo.find({ _id: { $in: ids }, userId: req.userId }).select('tags');
+    const tagCounts = {};
+    for (const todo of affectedTodos) {
+      for (const tagName of (todo.tags || [])) {
+        tagCounts[tagName] = (tagCounts[tagName] || 0) + 1;
+      }
+    }
+
     const result = await Todo.updateMany(
       { _id: { $in: ids }, userId: req.userId },
       { $set: { deletedAt: new Date() } }
     );
+
+    for (const [tagName, count] of Object.entries(tagCounts)) {
+      await Tag.findOneAndUpdate({ userId: req.userId, name: tagName }, { $inc: { count: -count } });
+    }
 
     res.json({ deleted: result.modifiedCount });
   } catch (error) {
@@ -447,7 +507,19 @@ export const getTrash = async (req, res) => {
 
 export const emptyTrash = async (req, res) => {
   try {
+    const trashedTodos = await Todo.find({ userId: req.userId, deletedAt: { $ne: null } }).select('tags');
+    const tagCounts = {};
+    for (const todo of trashedTodos) {
+      for (const tagName of (todo.tags || [])) {
+        tagCounts[tagName] = (tagCounts[tagName] || 0) + 1;
+      }
+    }
     const result = await Todo.deleteMany({ userId: req.userId, deletedAt: { $ne: null } });
+
+    for (const [tagName, count] of Object.entries(tagCounts)) {
+      await Tag.findOneAndUpdate({ userId: req.userId, name: tagName }, { $inc: { count: -count } });
+    }
+
     res.json({ deleted: result.deletedCount });
   } catch (error) {
     res.status(500).json({ error: error.message });

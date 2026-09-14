@@ -58,7 +58,10 @@ const useTodoStore = create((set, get) => ({
 
   restoreTodo: async (id) => {
     const { todo } = await api.post(`/todos/${id}/restore`);
-    set(state => ({ trash: state.trash.filter(t => t._id !== id) }));
+    set(state => ({
+      trash: state.trash.filter(t => t._id !== id),
+      todos: [todo, ...state.todos]
+    }));
     return todo;
   },
 

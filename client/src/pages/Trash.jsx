@@ -44,19 +44,31 @@ export default function Trash() {
   }, [fetchTrash]);
 
   const handleRestore = async (id) => {
-    await restoreTodo(id);
-    toast.success('Task restored');
+    try {
+      await restoreTodo(id);
+      toast.success('Task restored');
+    } catch {
+      toast.error('Failed to restore task');
+    }
   };
 
   const handlePermanentDelete = async (id) => {
-    await deleteTodo(id, { permanent: true });
-    toast.success('Task permanently deleted');
+    try {
+      await deleteTodo(id, { permanent: true });
+      toast.success('Task permanently deleted');
+    } catch {
+      toast.error('Failed to delete task');
+    }
   };
 
   const handleEmptyTrash = async () => {
-    await emptyTrash();
-    setShowConfirmEmpty(false);
-    toast.success('Trash emptied');
+    try {
+      await emptyTrash();
+      setShowConfirmEmpty(false);
+      toast.success('Trash emptied');
+    } catch {
+      toast.error('Failed to empty trash');
+    }
   };
 
   return (

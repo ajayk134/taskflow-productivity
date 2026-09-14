@@ -8,6 +8,15 @@ export const register = async (req, res) => {
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, password, and name are required' });
     }
+    if (typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    if (typeof name !== 'string' || !name.trim()) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email address' });
+    }
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
       return res.status(409).json({ error: 'Email already registered' });
@@ -59,9 +68,10 @@ export const getProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const updates = { ...req.body };
-    delete updates.password;
-    delete updates.userId;
+    const updates = {};
+    for (const key of ['name', 'email', 'avatar']) {
+      if (key in req.body) updates[key] = req.body[key];
+    }
 
     if ('email' in updates) {
       const email = updates.email?.trim();

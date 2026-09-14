@@ -160,7 +160,7 @@ export default function Login() {
                 />
                 <span className="text-sm text-gray-600 dark:text-gray-400">Remember me</span>
               </label>
-              <button type="button" className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
+              <button type="button" onClick={() => toast('Password reset is not yet implemented. Contact support.', { icon: '🔒' })} className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
                 Forgot password?
               </button>
             </div>

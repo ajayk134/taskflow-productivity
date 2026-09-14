@@ -53,6 +53,7 @@ export default function FocusMode({ onClose, currentTask }) {
   const [customShort, setCustomShort] = useState(5);
   const [customLong, setCustomLong] = useState(15);
   const intervalRef = useRef(null);
+  const sessionCountRef = useRef(0);
 
   const currentPreset = useMemo(() => preset === 3
     ? { work: customWork * 60, shortBreak: customShort * 60, longBreak: customLong * 60 }
@@ -90,10 +91,10 @@ export default function FocusMode({ onClose, currentTask }) {
           setIsRunning(false);
           if (soundEnabled) playNotificationSound();
           if (phase === PHASES.WORK) {
-            setSessionCount((c) => c + 1);
+            sessionCountRef.current = sessionCountRef.current + 1;
+            setSessionCount(sessionCountRef.current);
             setTotalFocusTime((t) => t + totalTime);
-            const newCount = sessionCount + 1;
-            if (newCount % 4 === 0) {
+            if (sessionCountRef.current % 4 === 0) {
               toast.success('Great work! Time for a long break.', { icon: '🎉' });
               switchPhase(PHASES.LONG_BREAK);
             } else {
@@ -110,7 +111,7 @@ export default function FocusMode({ onClose, currentTask }) {
       });
     }, 1000);
     return () => clearInterval(intervalRef.current);
-  }, [isRunning, phase, switchPhase, soundEnabled, totalTime, sessionCount]);
+  }, [isRunning, phase, switchPhase, soundEnabled, totalTime]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -135,6 +136,7 @@ export default function FocusMode({ onClose, currentTask }) {
   const handleStop = () => {
     clearInterval(intervalRef.current);
     setIsRunning(false);
+    sessionCountRef.current = 0;
     setSessionCount(0);
     setTotalFocusTime(0);
     setTimeLeft(currentPreset.work);

@@ -228,11 +228,11 @@ export default function Register() {
               />
               <label htmlFor="terms" className="text-sm text-gray-600 dark:text-gray-400">
                 I agree to the{' '}
-                <button type="button" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                <button type="button" onClick={() => toast('Terms of Service will be available soon.', { icon: '📄' })} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                   Terms of Service
                 </button>{' '}
                 and{' '}
-                <button type="button" className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                <button type="button" onClick={() => toast('Privacy Policy will be available soon.', { icon: '🔒' })} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                   Privacy Policy
                 </button>
               </label>

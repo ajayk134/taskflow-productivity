@@ -15,6 +15,8 @@ import {
   BookOpen,
   Moon,
   Droplets,
+  Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { format, subDays, isSameDay } from 'date-fns';
@@ -42,6 +44,8 @@ export default function Habits() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('active');
   const [search, setSearch] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchHabits = useCallback(async () => {
     setLoading(true);
@@ -172,6 +176,21 @@ export default function Habits() {
     }
   };
 
+  const permanentlyDeleteHabit = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/habits/${deleteTarget._id}`);
+      toast.success('Habit permanently deleted');
+      setDeleteTarget(null);
+      setHabits((prev) => prev.filter((h) => h._id !== deleteTarget._id));
+    } catch {
+      toast.error('Failed to delete habit. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const activeHabits = habits.filter((h) => !h.isArchived);
   const archivedHabits = habits.filter((h) => h.isArchived);
   const query = (search || '').trim().toLowerCase();
@@ -292,13 +311,22 @@ export default function Habits() {
                       <span className="text-gray-400">rate</span>
                     </div>
                     {isArchivedView ? (
-                      <button
-                        onClick={() => restoreHabit(habit._id)}
-                        className="ml-auto inline-flex items-center gap-1 p-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
-                        title="Restore"
-                      >
-                        <RefreshCcw className="w-3.5 h-3.5" /> Restore
-                      </button>
+                      <div className="ml-auto flex items-center gap-1">
+                        <button
+                          onClick={() => restoreHabit(habit._id)}
+                          className="inline-flex items-center gap-1 p-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-lg transition-colors"
+                          title="Restore"
+                        >
+                          <RefreshCcw className="w-3.5 h-3.5" /> Restore
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(habit)}
+                          className="inline-flex items-center gap-1 p-1.5 text-xs font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors"
+                          title="Delete permanently"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </div>
                     ) : (
                       <button
                         onClick={() => archiveHabit(habit._id)}
@@ -411,6 +439,34 @@ export default function Habits() {
         <div className="flex justify-end gap-2 mt-6">
           <button onClick={() => setShowCreate(false)} className="btn-secondary btn-sm">Cancel</button>
           <button onClick={handleCreate} className="btn-primary btn-sm">Create</button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={!!deleteTarget} onClose={() => !deleting && setDeleteTarget(null)} title="Delete Habit Permanently" size="sm">
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 dark:bg-red-500/10 flex items-center justify-center mt-0.5">
+              <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-700 dark:text-gray-300">
+                Are you sure you want to permanently delete <span className="font-semibold text-gray-900 dark:text-gray-100">{deleteTarget?.name}</span>?
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                This action cannot be undone. All habit data and completion history will be lost.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2 mt-6">
+          <button onClick={() => setDeleteTarget(null)} disabled={deleting} className="btn-secondary btn-sm">Cancel</button>
+          <button
+            onClick={permanentlyDeleteHabit}
+            disabled={deleting}
+            className="btn-sm px-4 py-2 rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {deleting ? 'Deleting...' : 'Delete Permanently'}
+          </button>
         </div>
       </Modal>
     </div>
